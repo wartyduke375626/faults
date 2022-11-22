@@ -14,6 +14,16 @@ __asm__ volatile ( \
     : /* No Clobbers */ \
 )
 
+#define waitForSignal(pin, bit) \
+__asm__ volatile ( \
+    "loop%=:"       "\n\t" \
+    "sbis %0, %1"   "\n\t" \
+    "rjmp loop%="   "\n\t" \
+    : /* No Outputs */ \
+    : "I" (pin), "i" (bit) \
+    : /* No Clobbers */ \
+)
+
 #define asmDelay(delay) \
 __asm__ volatile ( \
     "mov r23, %A0"     "\n\t" /* Cycles: 1 */ \
