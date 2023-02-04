@@ -10,11 +10,15 @@
 
 
 void experiment() {
-    powerOn(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
+    setPortOn(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
 
-    increment();
+    //increment();
+    jump();
+    //load();
+    //delayMicroseconds(1000);
+    //delay(5);
 
-    powerOff(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
+    setPortOff(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
 }
 
 void setup() {
@@ -32,5 +36,5 @@ void loop() {
     experiment();
     Serial.println("Experiment ended successfully.\n");
 
-    delay(5000);   
+    delay(3000);
 }

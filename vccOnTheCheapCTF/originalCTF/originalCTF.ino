@@ -21,7 +21,7 @@ void glitch() {
     int waste = 0;
     
     digitalWrite(powerPin, LOW);
-    for (int i = 0; i<glitchDelay; i++) { waste++; }                    
+    for (int i = 0; i<glitchDelay; i++) { waste++; }
     digitalWrite(powerPin, HIGH);
     
     glitchDelay +=10;

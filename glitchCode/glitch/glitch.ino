@@ -1,54 +1,55 @@
 #include "asm.h"
 
-#define POWER_PIN 2
-#define POWER_REG(reg) reg ## D
-#define POWER_BIT 2
-#define BUFFER_SIZE 100
+#define GLITCH_PIN 2
+#define GLITCH_REG(reg) reg ## D
+#define GLITCH_BIT 2
+
+#define SIGNAL_PIN 3
+#define SIGNAL_REG(reg) reg ## D
+#define SIGNAL_BIT 3
 
 
-//uint8_t glitchDelay = 10;
+void glitch(uint8_t glitchOffset, uint8_t glitchDelay) {
+    waitForSignal(_SFR_IO_ADDR(SIGNAL_REG(PIN)), SIGNAL_BIT);
 
+    //delay(glitchOffset);
+    //delayMicroseconds(glitchOffset);
+    asmDelay(glitchOffset);
+    //asmDelayLong(glitchOffset);
+    //nopDelay(10);
 
-void glitch(uint8_t delay) {
-    powerOff(_SFR_IO_ADDR(POWER_REG(PORT)), POWER_BIT);
+    setPortOff(_SFR_IO_ADDR(GLITCH_REG(PORT)), GLITCH_BIT);
 
-    delayMicroseconds(delay);
-    asmDelay(delay);
-    //asmDelay2(delay);
-    //__asm__ volatile("nop");
+    //delay(glitchDelay);
+    //delayMicroseconds(glitchDelay);
+    asmDelay(glitchDelay);
+    //asmDelayLong(glitchDelay);
+    //nopDelay(10);
 
-    powerOn(_SFR_IO_ADDR(POWER_REG(PORT)), POWER_BIT);
+    setPortOn(_SFR_IO_ADDR(GLITCH_REG(PORT)), GLITCH_BIT);
 }
 
 
 void setup() {
     Serial.begin(19200);
-    Serial.setTimeout(100);
-    pinMode(POWER_PIN, OUTPUT);
-    randomSeed(analogRead(5));
+    pinMode(GLITCH_PIN, OUTPUT);
+    pinMode(SIGNAL_PIN, INPUT);
 
-    digitalWrite(POWER_PIN, HIGH);
-    delay(3000);
+    digitalWrite(GLITCH_PIN, HIGH);
+    delay(5000);
 
     Serial.println("Glitching is ready.");
 }
 
 
 void loop() {
-    char buffer[BUFFER_SIZE];
-    memset(buffer, 0, BUFFER_SIZE * sizeof(char));
-    Serial.readBytesUntil('\n', buffer, BUFFER_SIZE);
-    Serial.println(buffer);
-    
-    for (unsigned int i=0; i<5; ++i) {
-        uint16_t r = random(1, 100);
-        delay(r);
-        uint16_t r = random(1, 8);
-        Serial.println(r);
-        glitch(r);
-    }
+    uint8_t glitchOffset = 1;
+    uint8_t glitchDelay = 4;
+    Serial.println("Waiting for signal...");
+    glitch(glitchOffset, glitchDelay);
 
-    //glitchDelay = (glitchDelay + 1u) % 16u;
-    Serial.println("Glitch Attempt executed.");
-    delay(1000);
+    Serial.print("Glitch executed: offset "); Serial.print(glitchOffset);
+    Serial.print(", delay "); Serial.print(glitchDelay); Serial.println("\n");
+
+    delay(10);
 }
