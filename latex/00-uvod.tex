@@ -1,0 +1,7 @@
+\chapter*{Úvod} % chapter* je necislovana kapitola
+\addcontentsline{toc}{chapter}{Úvod} % rucne pridanie do obsahu
+\markboth{Úvod}{Úvod} % vyriesenie hlaviciek
+
+Pri návrhu a implementácii softvéru sa často predpokladá, že hardvér, na ktorý bude softvérové dielo nasadené bude jednotlivé inštrukcie vykonávať bezchybne a presne tak, ako výrobca daného hardvéru uvádza. Za bežných podmienok je väčšinou tento predpoklad skutočne naplnený. Vplyv externých fyzikálnych faktorov, ako napríklad prudká a krátka zmena napätia, elektromagnetické rušenie a mnoho ďalších, však môže mať za následok chybné vykonanie aktuálnej inštrukcie a tým spôsobiť nedefinované správanie bežiaceho procesu. Takýmto spôsobom možno cielene vyvolať konkrétnu chybnú operáciu v správnom čase a zaútočiť tak na dané zariadenie, napríklad s účelom obísť bezpečnostný mechanizmus. Takýto typ útokov na hardvér nazývame indukovanie chýb (angl. fault injection).
+
+Hlavným cieľom tejto práce je práve overenie či aj lacný hardvér môže byť použitý ako zdroj indukovania chyby, resp. čo ním možno dosiahnuť. Následnou analýzou potom určiť, aké typy chýb na úrovní jednotlivých inštrukcií možno dosiahnuť a ako presné časovanie je potrebné. Zároveň vyskúšame tieto znalosti aplikovať na štandardné programy písané v jazykoch na vyššej úrovni (napríklad C).
