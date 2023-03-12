@@ -22,8 +22,9 @@ void setup() {
 }
 
 void glitch() {
+    register uint8_t localDelay = globalDelay;
     setPortOff(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
-    asmDelay(glitchDelay);
+    asmDelay(localDelay);
     setPortOn(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
     
     glitchDelay += 1;

@@ -1,24 +1,40 @@
 #include "asm.h"
-#include "experiments.h"
-
-#define WHITE_LED 12
-#define YELLOW_LED 13
 
 #define SIGNAL_PIN 8
-#define SIGNAL_REG(reg) reg ## B
+#define SIGNAL_PORT PORTB
 #define SIGNAL_BIT 0
 
 
+// set experiment
+//#define INCREMENT 1
+//#define JUMP 1
+#define LOAD 1
+
+#include "experiments.h"
+
+
 void experiment() {
-    setPortOn(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
+    Serial.println(EXPERIMENT_NAME);
+    register uint8_t val;
 
-    //increment();
-    jump();
-    //load();
-    //delayMicroseconds(1000);
-    //delay(5);
+    setPortOn(_SFR_IO_ADDR(SIGNAL_PORT), SIGNAL_BIT);
+    asmExperiment(val);
+    setPortOff(_SFR_IO_ADDR(SIGNAL_PORT), SIGNAL_BIT);
 
-    setPortOff(_SFR_IO_ADDR(SIGNAL_REG(PORT)), SIGNAL_BIT);
+    Serial.print("\tresult: "); Serial.println(val);
+    Serial.print("\texpected: "); Serial.println(EXPECTED_RESULT);
+}
+
+void readDelay() {
+    Serial.print("\tdelay: ");
+    // read delay count
+    for (uint8_t i=0; i<32; ++i){
+        if (Serial.available() > 0) {
+            uint8_t incomingByte = Serial.read();
+            Serial.print(char(incomingByte));
+        }
+    }
+    Serial.println();
 }
 
 void setup() {
@@ -26,14 +42,15 @@ void setup() {
     pinMode(SIGNAL_PIN, OUTPUT);
 
     digitalWrite(SIGNAL_PIN, LOW);
-    delay(3000);
+    delay(5000);
 
-    Serial.println("Experiment is ready.");
+    Serial.println("Experiments are ready.\n");
 }
 
 void loop() {
-    Serial.println("Starting experiment.");
+    Serial.println("Starting experiment...");
     experiment();
+    //readDelay();
     Serial.println("Experiment ended successfully.\n");
 
     delay(3000);

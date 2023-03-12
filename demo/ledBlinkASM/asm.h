@@ -14,7 +14,19 @@ __asm__ volatile ( \
     : /* No Clobbers */ \
 )
 
-#define asmDelay0(count) \
+
+#define asmDelay(count) \
+__asm__ volatile( \
+    "mov r24, %0"   "\n\t" /* Cycles 1 */ \
+    "loop%=:"       "\n\t" \
+    "dec r24"       "\n\t" /* Cycles 1 */ \
+    "brne loop%="   "\n\t" /* Cycles 2 */ \
+    : /* No Outputs */ \
+    : "r" (count) \
+    : "r24" \
+)
+
+#define asmDelayLong(count) \
 __asm__ volatile ( \
     "mov r23, %A0"     "\n\t" /* Cycles: 1 */ \
     "mov r24, %B0"     "\n\t" /* Cycles: 1 */ \
@@ -22,8 +34,6 @@ __asm__ volatile ( \
     "breq out_loop%="  "\n\t" /* Cycles: 1 */ \
 \
     "in_loop%=:"       "\n\t" \
-    "nop"              "\n\t" /* Cycles: 1 */ \
-    "nop"              "\n\t" /* Cycles: 1 */ \
     "nop"              "\n\t" /* Cycles: 1 */ \
     "dec r23"          "\n\t" /* Cycles: 1 */ \
     "brne in_loop%="   "\n\t" /* Cycles: 2 */ \
@@ -40,50 +50,15 @@ __asm__ volatile ( \
     : "r23", "r24" \
 )
 
-#define asmDelay1(d0, d1, d2, d3) \
-__asm__ volatile ( \
-    "ldi r19, %[D3]\n\t" \
-    "loop3_%=:\n\t" \
-    "ldi r18, %[D2]\n\t" \
-    "loop2_%=:\n\t" \
-    "ldi r17, %[D1]\n\t" \
-    "loop1_%=:\n\t" \
-    "ldi r16, %[D0]\n\t" \
-    "loop0_%=:\n\t" \
-    "nop\n\t" \
-    "dec r16\n\t" \
-    "brne loop0_%=\n\t" \
-    "dec r17\n\t" \
-    "brne loop1_%=\n\t" \
-    "dec r18\n\t" \
-    "brne loop2_%=\n\t" \
-    "dec r19\n\t" \
-    "brne loop3_%=\n\t" \
-    : /* No OUT */ \
-    : [D0] "i" (d0), [D1] "i" (d1), [D2] "i" (d2), [D3] "i" (d3) \
-    : "r16", "r17", "r18", "r19" \
-)
-
-#define asmDelay2(delay) \
-__asm__ volatile ( \
-     "mov r24, %D0\n\t" \
-     "loop3_%=:\n\t" \
-     "mov r23, %C0\n\t" \
-     "loop2_%=:\n\t" \
-     "mov r22, %B0\n\t" \
-     "loop1_%=:\n\t" \
-     "mov r21, %A0\n\t" \
-     "loop0_%=:\n\t" \
-     "nop\n\t" \
-     "dec r21\n\t" \
-     "brne loop0_%=\n\t" \
-     "dec r22\n\t" \
-     "brne loop1_%=\n\t" \
-     "dec r23\n\t" \
-     "brne loop2_%=\n\t" \
-     "dec r24\n\t" \
-     "brne loop3_%=\n\t" \
-     : /* No OUT */ \
-     : "r" (delay) \
-     : "r21", "r22", "r23", "r24" \
-)
+#define rep0(expr)
+#define rep1(expr) expr rep0(expr)
+#define rep2(expr) expr rep1(expr)
+#define rep3(expr) expr rep2(expr)
+#define rep4(expr) expr rep3(expr)
+#define rep5(expr) expr rep4(expr)
+#define rep6(expr) expr rep5(expr)
+#define rep7(expr) expr rep6(expr)
+#define rep8(expr) expr rep7(expr)
+#define rep9(expr) expr rep8(expr)
+#define rep10(expr) expr rep9(expr)
+#define nopDelay(count) rep##count(__asm__ volatile("nop");)
