@@ -1,3 +1,8 @@
+/*
+Original code from: https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/
+Code was modified for our purposes
+*/
+
 #include "asm.h"
 
 #define GLITCH_PIN 2

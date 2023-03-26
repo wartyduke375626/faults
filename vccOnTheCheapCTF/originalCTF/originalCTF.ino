@@ -1,3 +1,5 @@
+/* Code cpied from: https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/ */
+
 int incomingByte = 0;
 char b[5];
 
