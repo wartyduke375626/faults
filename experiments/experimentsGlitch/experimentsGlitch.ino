@@ -54,7 +54,7 @@ void loop() {
     //glitchDelay += 1;
     //if (glitchDelay == 8) glitchDelay = 4;
     //glitchOffset += 1;
-    //if (glitchOffset == 11) glitchDelay = 1;
+    //if (glitchOffset == 11) glitchOffset = 1;
 
     // wait for power to stabilize before next glitch
     delay(100);

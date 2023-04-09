@@ -25,18 +25,6 @@ void experiment() {
     Serial.print("\texpected: "); Serial.println(EXPECTED_RESULT);
 }
 
-// reads delay value from serial communication (used for glitching with STM board)
-void readDelay() {
-    Serial.print("\tdelay: ");
-    for (uint8_t i=0; i<32; ++i){
-        if (Serial.available() > 0) {
-            uint8_t incomingByte = Serial.read();
-            Serial.print(char(incomingByte));
-        }
-    }
-    Serial.println();
-}
-
 void setup() {
     Serial.begin(19200);
     pinMode(SIGNAL_PIN, OUTPUT);
@@ -50,8 +38,6 @@ void setup() {
 void loop() {
     Serial.println("Starting experiment...");
     experiment();
-    // uncomment when connected to STM board, which sends corresponding glitchDelay used during attack
-    //readDelay();
     Serial.println("Experiment ended successfully.\n");
 
     // wait for power to stabilize before next attack
