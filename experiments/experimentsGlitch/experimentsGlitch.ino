@@ -8,9 +8,14 @@
 #define SIGNAL_PORT PIND
 #define SIGNAL_BIT 3
 
+#define GLITCH_OFFSET_MIN 1
+#define GLITCH_OFFSET_MAX 1
+#define GLITCH_DELAY_MIN 6
+#define GLITCH_DELAY_MAX 6
 
-uint8_t glitchOffset = 1;
-uint8_t glitchDelay = 6;
+
+uint8_t glitchOffset = GLITCH_OFFSET_MIN;
+uint8_t glitchDelay = GLITCH_DELAY_MIN;
 
 // Waits for signal, then delays by glitchOffset and executes a glitch of length glitchDelay
 void glitch() {
@@ -50,11 +55,10 @@ void loop() {
     Serial.print("\toffset "); Serial.println(glitchOffset);
     Serial.print("\tdelay "); Serial.println(glitchDelay);
 
-    // uncomment for automatic glitchDelay and/or glitchOffset increment
-    //glitchDelay += 1;
-    //if (glitchDelay == 8) glitchDelay = 4;
-    //glitchOffset += 1;
-    //if (glitchOffset == 11) glitchOffset = 1;
+    glitchOffset += 1;
+    if (glitchOffset > GLITCH_OFFSET_MAX) glitchOffset = GLITCH_OFFSET_MIN;
+    glitchDelay += 1;
+    if (glitchDelay > GLITCH_DELAY_MAX) glitchDelay = GLITCH_DELAY_MIN;
 
     // wait for power to stabilize before next glitch
     delay(100);

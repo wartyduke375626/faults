@@ -1,5 +1,78 @@
 \chapter{Príklady úloh do súťaží}
 
-\label{kap:CTF} % id kapitoly pre prikaz ref
+\label{kap:CTF}
 
-V tejto kapitole využijeme výsledky analýzy útokov z kapitoly \ref{kap:utoky} na prípravu ukážkových úloh do súťaží.
+V tejto kapitole využijeme výsledky analýzy útokov z kapitoly \ref{kap:utoky} na prípravu ukážkových úloh do súťaží. Podarilo sa nám demonštrovať, že pomocou útoku využívajúceho techniku zmeny napätia vieme spôsobiť cielené vynechanie inštrukcie. Na útok využijeme zapojenie s tranzistorom, ktoré bolo pre naše účely dostatočne účinné. Zároveň budeme brať do úvahy obmedzenie dané nízkou presnosťou hardvéru riadiaceho obvod s tranzistorom. Kritickú časť kódu, na ktorú bude v príklade treba zacieliť preto implementujeme v asembleri a inštrukcie zvolíme tak, aby bolo útok možné úspešne realizovať.
+
+Konkrétne uvedieme dva príklady, jeden jednoduchý cielene implementovaný tak, aby bolo jednoduché na program zaútočiť. V druhom príklade sa budeme snažiť uviesť realistickejší program, ktorý udeľuje prístup pomocou čítačky RFID (Radio Frequency IDentification) kariet. Následne demonštrujeme úspešný útok, ktorý spôsobí, že program udelí prístup aj po prečítaní karty, ktorej prístup nemal udeliť. Súčasťou oboch príkladov bude zároveň vzorové riešenie, v ktorom popíšeme použitý program aj potrebné zapojenie pre realizáciu útoku. Pri riešení oboch príkladoch využijeme znalosť zdrojového kódu programu. V reálnej situácii by pravdepodobne pred implementáciou útoku bolo potrebné skompilovaný kód analyzovať pomocou reverzného inžinierstva a nájsť v kóde citlivé inštrukcie, na ktoré zacieliť. Takáto analýza však presahuje rámec tejto práce a našim zámerom je demonštrovať funkčnosť samotného útoku.
+
+\section{Príklad 1 -- Uzamknutý čip}
+Ako prvý predstavíme jednoduchý príklad podobný s príkladom zo súťaže CTF, na ktorý sme útočili v kapitole \ref{kap:utoky}. Cieľom tohto príkladu bude ukázať niektoré základné princípy postupu pri útoku pomocou indukovania chýb -- identifikovať citlivú časť kódu, využitie výstupných signálov programu na synchronizáciu zdroja útoku s cieľom a správne načasovanie útoku.
+
+Najskôr je potrebné spojazdniť program, na ktorý následne budeme útočiť. Program využíva na výstup dve signalizačné LED a sériovú komunikáciu pomocou rozhrania UART. Okrem základného zapojenia mikrokontroléra z obrázku \ref{obr:schemeATMega} teda pripojíme cez 330 $\Omega$ odpor ešte dve LED -- červenú k pinu GPIO 7 (Port D7) a zelenú k pinu GPIO 8 (Port B0). Schéma celého zapojenia aj s útočiacim hardvérom je na obrázku \ref{obr:schemeCTF-LED}. Následne nahráme program na cieľový mikrokontrolér ATMega328P. Po spustení program po chvíli na sériový port pošle správu, že čip úspešne naštartoval. Následne začne periodicky blikať červenou LED a posielať správu \uv{čip je v stave uzamknutý}. Zadaním tejto úlohy je teda \uv{odomknúť} čip.
+
+\subsection{Vzorové riešenie}
+Po analýze zdrojového kódu zistíme, že hlavný beh programu sa skladá z dvoch while-cyklov. V prvom sa mení logická hodnota na porte červenej LED (čo spôsobuje efekt blikania) a periodicky sa posiela správ \uv{čip je v stave uzamknutý}. Pričom prvý cyklus sa opakuje kým premenná \uv{status} bude rovná nule. Po skončení prvého cyklu sa rozsvieti zelená LED (bit v príslušnom porte sa nastaví na logickú jednotku) a následne sa spustí druhý cyklus v ktorom sa periodicky posiela správa \uv{čip je v stave odomknutý}. Cieľom nášho útoku bude teda spôsobiť, aby sa prvý cyklus ukončil.
+
+To možno vo všeobecnosti (pomocou indukovania chýb) dosiahnuť rôznymi spôsobmi, napr. ovplyvnením inštrukcie skoku, zápisu do premennej \uv{status}. Nie všetky ovplyvnenia sú však jednoducho dosiahnuteľné najmä pri použití lacnejšieho hardvéru ako sme ukázali v kapitole \ref{kap:utoky}. Možno si však všimnúť, že v prvom cykle sa opakuje volanie funkcie \uv{checkStatus}, ktorá pristupuje ku kľúčovej premennej \uv{status}. Následne sa spustí časť kódu písaná v asembleri -- séria tridsiatich inštrukcií, ktoré modifikujú aj register, ktorého výsledná hodnota sa následne uloží do premennej \uv{status}. (Previazanie častí kódu písaných v jazykoch C a asembler je zabezpečené vďaka C Inline Assembly.) Ukážka úryvkov tohto kódu je v algoritme \ref{alg:asmCTF1}. Sémantika tejto časti programu vyzerá na prvý pohľad krypticky (nepravidelné striedanie zdanlivo náhodných inštrukcií, ktoré modifikujú registre), po hlbšej analýze napríklad prekopírovaním inštrukcií do emulátora architektúry AVR a dynamickej analýze jeho správania zistíme, že sled inštrukcií je zvolený tak, aby výsledok bol vždy rovnaký -- v registri previazaným s premennou \uv{status} bude uložená hodnota nula. To spôsobí, že program beží dookola v prvom cykle.
+
+\begin{lstlisting}[float,language=C,caption={Ukážky kritickej časti kódu z príkladu 1. \%0 označuje výstupný parameter -- register s výstupnou hodnotou.},label=alg:asmCTF1]
+; inicializacia registrov
+ldi %0, 0xFF
+ldi r24, 0x20
+ldi r25, 0x0F
+ldi r26, 0xAA
+
+; ...
+
+; ukazka zo stredu kodu
+add %0, r26
+clr r26         ; vynuluje register
+sub r26, r24
+eor %0, r3      ; instrukcia xor v architekture AVR
+
+; ...
+
+; zaver
+mov r25, r3     ; tato instrukcia nema vplyv na vysledok
+ldi r25, 0x2F   ; r25 sa vzapati prepise
+or %0, r25
+inc %0
+\end{lstlisting}
+
+Táto časť kódu je zároveň pomerne citlivá na útok pomocou indukovania chýb, keďže vynechanie ľubovolnej inštrukcie z tejto časti z vysokou pravdepodobnosťou spôsobí, že výsledkom tejto série inštrukcií už nebude hodnota nula a program prejde do druhého cyklu, čím sa čip odomkne. Aby to bolo možné dosiahnuť, je potrebné riadenie útoku správne načasovať. Na to možno využiť samotný program bežiaci na cieli. tesne pred zavolaním funkcie \uv{checkStatus} sa volá funkcia, ktorá zapína červenú LED. Tento výstup možno využiť ako signál pre synchronizáciu. Zároveň bude treba útok od prijatia signálu správne načasovať tak, aby sa trafil do kritickej časti kódu. Keďže necielime na konkrétnu inštrukciu, ale stačí trafiť (takmer) ktorúkoľvek inštrukciu v rámci funkcie \uv{checkStatus}, bude načasovanie pomerne jednoduché.
+
+Využijeme teda útok pomocou techniky zmeny napätia, konkrétne zapojenie s tranzistorom, ktorý sme analyzovali v kapitole \ref{kap:utoky}. Ako riadiaci hardvér zvolíme dosku Arduino Nano a využijeme aj rovnaký program z kapitoly \ref{kap:utoky}, bude však treba upraviť parameter odstup. Program nastavíme tak, aby začal s hodnotou odstupu jeden a postupne ju bude zväčšovať po každom po kuse o útok o jeden. Neočakávame, že zdržanie od signálu bude trvať dlhšie ako niekoľko sto nanosekúnd, preto nastavíme maximálnu hodnotu odstupu na desať. To na základe analýzy pomocou osciloskopu v kapitole \ref{kap:utoky} predstavuje približne dve mikrosekundy, teda rádovo viac ako očakávame. Po dosiahnutí maximálnej hodnoty parametra odstup sa táto hodnota obnoví na jeden a takto bude program pokračovať až kým sa útok nepodarí. Schéma zapojenia aj s doskou Nano, ktorá riadi útok je na obrázku \ref{obr:schemeCTF-LED}.
+
+\begin{figure}
+    \centerline{\includegraphics[width=1\textwidth]{images/schemeCTF-LED.png}}
+    \caption[Schéma zapojenia pri útoku na príklad 1]{Schéma zapojenia pri útoku na príklad 1 -- Uzamknutý čip.}
+    \label{obr:schemeCTF-LED}
+\end{figure}
+
+Uvedené riešenie sme následne implementovali podľa popísaného postupu a útok sa podarilo úspešne realizovať. Útok bol úspešný hneď pri hodnote jeden parametra odstup. Program rozsvietil zelenú LED a začal posielať správu \uv{čip je v stave odomknutý}. Pri hodnote parametra odstup viac ako jeden bol útok už neúspešný (odstup bol pravdepodobne príliš dlhý). V prípade, že by sme útok riadili pomocou dosky Discovery, by bol postup analogický. Akurát by bolo opäť potrebné správne nastaviť parameter odstup. Pravdepodobne na väčšiu hodnotu, keďže doska Discovery má väčšiu frekvenciu procesora. Keďže na úspešný útok postačovala doska Nano, dosku Discovery sme v tomto príklade nepoužili. Riadenie útoku oboma doskami sme pre naše účeli dostatočne porovnali pri analýze v kapitole \ref{kap:utoky}.
+
+\section{Príklad 2 -- Čítačka RFID kariet}
+Druhým príkladom je program, ktorý udeľuje prístup na základe čítačky RFID (Radio Frequency Identification) kariet. Cieľom tohto príkladu je demonštrácia útoku na realistickejší program v porovnaní s prvým príkladom. Inšpiráciu programu na čítanie RFID kariet sme prevzali z ročníkového projektu Deadlock \cite{deadlock}. Program sme pre naše účely do značnej mieri zjednodušili. Pôvodný program predstavuje čítačku kariet, ktorá zároveň komunikuje so serverom a na základe tejto komunikácie sa rozhoduje, či udelí prístup. Z programu sme odstránili komunikáciu so serverom a rozhodnutie o udelení prístupu sme \uv{zadrôtovali} do programu porovnaním s konštantou. Toto porovnanie sme implementovali v jazyku asembler spôsobom, aby bolo jednoduchšie na program zaútočiť. Túto časť kódu bližšie analyzujeme vo vzorovom riešení.
+
+Zároveň bolo potrebné modifikovať zapojenie hardvéru, keďže pôvodný program nebol implementovaný pre mikrokontrolér ATMega328P. Pre zapojenie hardvéru budú potrebné nasledovné komponenty:
+\begin{itemize}
+    \item ATMega328P-PU -- THT púzdro
+    \item kontaktné nepájivé pole
+    \item modul PN532 pre čítanie RFID kariet pomocou NFC (Near Field Communication) -- zapojíme cez rozhranie SPI (Serial Peripheral Interface)
+    \item rezistory -- 4-krát 330 $\Omega$ k LED
+    \item 4 kusy LED -- rôzne farby (červená, zelená, žltá, biela)
+    \item prepojovacie kábliky typu M-M (Male to Male)
+    \item všetky ostatné súčiastky použité v základnom zapojení mikrokontroléra ATMega328P z kapitoly \ref{kap:hardver}.
+\end{itemize}
+Najskôr zapojíme základné komponenty k mikrokontroléru podľa zapojenia z obrázku \ref{obr:schemeATMega} z kapitoly \ref{kap:hardver}. Ostatné časti doplníme podľa zapojenia na obrázku \ref{obr:schemeRFID}. Toto zapojenie ešte neobsahuje hardvér potrebný pre útok, ale predstavuje korektné zapojenie pre fungovanie programu.
+
+\begin{figure}
+    \centerline{\includegraphics[width=1\textwidth]{images/schemeRFID.png}}
+    \caption[Schéma zapojenia mikrokontroléra v príklade 2]{Schéma zapojenia mikrokontroléra v príklade 2 -- Čítačka RFID kariet. Okrem znázorneného zapojenia sú k mikrokontroléru pripojené aj základné súčiastky z obrázku \ref{obr:schemeATMega}. (Zapojenie Žltej LED sme pre jednoznačnosť uviedli aj v tomto obrázku.)}
+    \label{obr:schemeRFID}
+\end{figure}
+
+Teraz môžeme nahrať a spustiť program na cieľovom ATMega328P. Po spustení program za chvíľu, rovnako ako v prvom príklade, pošle správu na sériový port, že bol úspešne naštartovaný. V prípade, že sa nepodarí nadviazať komunikáciu s modulom PN532 pre čítanie RFID kariet, program pošle chybovú hlášku. Pokiaľ nastane tento problém, pravdepodobne ide o nesprávne zapojenie hardvéru. Pokiaľ všetko prebehne správne, spustí sa hlavný cyklus, v ktorom sa program pokúsi prečítať RFID kartu podľa štandardu ISO443A. Pokiaľ čítačka žiadnu čipovú kartu nedeteguje, pošle na sériový port správu, že čaká na priloženie karty. Tento proces sa periodicky opakuje. Po priložení karty a úspešnom prečítaní, sa na krátku chvíľu rozsvieti biela LED na indikáciu, že čítanie bolo úspešné. Následne sa rozsvieti červená alebo zelená LED, ktorá indikuje zamietnutie, resp. povolenie prístupu, zároveň program pošle príslušnú správu na sériový port. Program je nastavený tak, aby udelil prístup jedinej čipovej karte a to karte s konkrétnym ID (0x348BD1A3 v poradí od najvýznamnejšieho bajtu). Zadaním tejto úlohy je pomocou indukovania chýb prinútiť mikrokontrolér, aby udelil prístup (indikované rozsvietením zelenej LED) po prečítaní karty s nesprávnym ID, ktorej prístup nemal udeliť.
+
+\subsection{Vzorové riešenie}
