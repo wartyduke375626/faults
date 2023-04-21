@@ -14,10 +14,10 @@ Najskôr je potrebné spojazdniť program, na ktorý následne budeme útočiť.
 \subsection{Vzorové riešenie}
 Po analýze zdrojového kódu zistíme, že hlavný beh programu sa skladá z dvoch while-cyklov. V prvom sa mení logická hodnota na porte červenej LED (čo spôsobuje efekt blikania) a periodicky sa posiela správ \uv{čip je v stave uzamknutý}. Pričom prvý cyklus sa opakuje kým premenná \uv{status} bude rovná nule. Po skončení prvého cyklu sa rozsvieti zelená LED (bit v príslušnom porte sa nastaví na logickú jednotku) a následne sa spustí druhý cyklus v ktorom sa periodicky posiela správa \uv{čip je v stave odomknutý}. Cieľom nášho útoku bude teda spôsobiť, aby sa prvý cyklus ukončil.
 
-To možno vo všeobecnosti (pomocou indukovania chýb) dosiahnuť rôznymi spôsobmi, napr. ovplyvnením inštrukcie skoku, zápisu do premennej \uv{status}. Nie všetky ovplyvnenia sú však jednoducho dosiahnuteľné najmä pri použití lacnejšieho hardvéru ako sme ukázali v kapitole \ref{kap:utoky}. Možno si však všimnúť, že v prvom cykle sa opakuje volanie funkcie \uv{checkStatus}, ktorá pristupuje ku kľúčovej premennej \uv{status}. Následne sa spustí časť kódu písaná v asembleri -- séria tridsiatich inštrukcií, ktoré modifikujú aj register, ktorého výsledná hodnota sa následne uloží do premennej \uv{status}. (Previazanie častí kódu písaných v jazykoch C a asembler je zabezpečené vďaka C Inline Assembly.) Ukážka úryvkov tohto kódu je v algoritme \ref{alg:asmCTF1}. Sémantika tejto časti programu vyzerá na prvý pohľad krypticky (nepravidelné striedanie zdanlivo náhodných inštrukcií, ktoré modifikujú registre), po hlbšej analýze napríklad prekopírovaním inštrukcií do emulátora architektúry AVR a dynamickej analýze jeho správania zistíme, že sled inštrukcií je zvolený tak, aby výsledok bol vždy rovnaký -- v registri previazaným s premennou \uv{status} bude uložená hodnota nula. To spôsobí, že program beží dookola v prvom cykle.
+To možno vo všeobecnosti (pomocou indukovania chýb) dosiahnuť rôznymi spôsobmi, napr. ovplyvnením inštrukcie skoku, zápisu do premennej \uv{status}. Nie všetky ovplyvnenia sú však jednoducho dosiahnuteľné najmä pri použití lacnejšieho hardvéru ako sme ukázali v kapitole \ref{kap:utoky}. Možno si však všimnúť, že v prvom cykle sa opakuje volanie funkcie \uv{checkStatus}, ktorá pristupuje ku kľúčovej premennej \uv{status}. Následne sa spustí časť kódu písaná v asembleri -- séria tridsiatich inštrukcií, ktoré modifikujú aj register, ktorého výsledná hodnota sa následne uloží do premennej \uv{status}. (Previazanie častí kódu písaných v jazykoch C a asembler je zabezpečené vďaka C Inline Assembly \cite{inlineAsm}.) Ukážka úryvkov tohto kódu je v algoritme \ref{alg:asmCTF1}. Sémantika tejto časti programu vyzerá na prvý pohľad krypticky (nepravidelné striedanie zdanlivo náhodných inštrukcií, ktoré modifikujú registre), po hlbšej analýze napríklad prekopírovaním inštrukcií do emulátora architektúry AVR a dynamickej analýze jeho správania zistíme, že sled inštrukcií je zvolený tak, aby výsledok bol vždy rovnaký -- v registri previazaným s premennou \uv{status} bude uložená hodnota nula. To spôsobí, že program beží dookola v prvom cykle.
 
-\begin{lstlisting}[float,language=C,caption={Ukážky kritickej časti kódu z príkladu 1. \%0 označuje výstupný parameter -- register s výstupnou hodnotou.},label=alg:asmCTF1]
-; inicializacia registrov
+\begin{lstlisting}[float,language=AVR,caption={Ukážky kritickej časti kódu z príkladu 1. \%0 označuje výstupný parameter -- register s výstupnou hodnotou.},label=alg:asmCTF1]
+; inicializácia registrov
 ldi %0, 0xFF
 ldi r24, 0x20
 ldi r25, 0x0F
@@ -25,17 +25,17 @@ ldi r26, 0xAA
 
 ; ...
 
-; ukazka zo stredu kodu
+; ukážka zo stredu kódu
 add %0, r26
 clr r26         ; vynuluje register
 sub r26, r24
-eor %0, r3      ; instrukcia xor v architekture AVR
+eor %0, r3      ; inštrukcia xor v architektúre AVR
 
 ; ...
 
-; zaver
-mov r25, r3     ; tato instrukcia nema vplyv na vysledok
-ldi r25, 0x2F   ; r25 sa vzapati prepise
+; záver
+mov r25, r3     ; táto inštrukcia nemá vplyv na výsledok
+ldi r25, 0x2F   ; r25 sa vzápätí prepíše
 or %0, r25
 inc %0
 \end{lstlisting}
@@ -46,19 +46,19 @@ Využijeme teda útok pomocou techniky zmeny napätia, konkrétne zapojenie s tr
 
 \begin{figure}
     \centerline{\includegraphics[width=1\textwidth]{images/schemeCTF-LED.png}}
-    \caption[Schéma zapojenia pri útoku na príklad 1]{Schéma zapojenia pri útoku na príklad 1 -- Uzamknutý čip.}
+    \caption[Schéma zapojenia pre útok na príklad 1]{Schéma zapojenia pre útok na príklad 1 -- Uzamknutý čip. K mikrokontroléru ATMega328P sú pripojené aj ostatné komponenty (nie sú znázornené kvôli prehľadnosti) podľa schémy \ref{obr:schemeATMega} z kapitoly \ref{kap:hardver}.}
     \label{obr:schemeCTF-LED}
 \end{figure}
 
 Uvedené riešenie sme následne implementovali podľa popísaného postupu a útok sa podarilo úspešne realizovať. Útok bol úspešný hneď pri hodnote jeden parametra odstup. Program rozsvietil zelenú LED a začal posielať správu \uv{čip je v stave odomknutý}. Pri hodnote parametra odstup viac ako jeden bol útok už neúspešný (odstup bol pravdepodobne príliš dlhý). V prípade, že by sme útok riadili pomocou dosky Discovery, by bol postup analogický. Akurát by bolo opäť potrebné správne nastaviť parameter odstup. Pravdepodobne na väčšiu hodnotu, keďže doska Discovery má väčšiu frekvenciu procesora. Keďže na úspešný útok postačovala doska Nano, dosku Discovery sme v tomto príklade nepoužili. Riadenie útoku oboma doskami sme pre naše účeli dostatočne porovnali pri analýze v kapitole \ref{kap:utoky}.
 
 \section{Príklad 2 -- Čítačka RFID kariet}
-Druhým príkladom je program, ktorý udeľuje prístup na základe čítačky RFID (Radio Frequency Identification) kariet. Cieľom tohto príkladu je demonštrácia útoku na realistickejší program v porovnaní s prvým príkladom. Inšpiráciu programu na čítanie RFID kariet sme prevzali z ročníkového projektu Deadlock \cite{deadlock}. Program sme pre naše účely do značnej mieri zjednodušili. Pôvodný program predstavuje čítačku kariet, ktorá zároveň komunikuje so serverom a na základe tejto komunikácie sa rozhoduje, či udelí prístup. Z programu sme odstránili komunikáciu so serverom a rozhodnutie o udelení prístupu sme \uv{zadrôtovali} do programu porovnaním s konštantou. Toto porovnanie sme implementovali v jazyku asembler spôsobom, aby bolo jednoduchšie na program zaútočiť. Túto časť kódu bližšie analyzujeme vo vzorovom riešení.
+Druhým príkladom je program, ktorý udeľuje prístup na základe čítačky RFID (Radio Frequency Identification) kariet, ďalej len čipová karta. Cieľom tohto príkladu je demonštrácia útoku na realistickejší program v porovnaní s prvým príkladom. Inšpiráciu programu na čítanie čipových kariet sme prevzali z ročníkového projektu Deadlock \cite{deadlock}. Program sme pre naše účely do značnej mieri zjednodušili. Pôvodný program predstavuje čítačku kariet, ktorá zároveň komunikuje so serverom a na základe tejto komunikácie sa rozhoduje, či udelí prístup. Z programu sme odstránili komunikáciu so serverom a rozhodnutie o udelení prístupu sme \uv{zadrôtovali} do programu porovnaním s konštantou. Toto porovnanie sme implementovali v jazyku asembler spôsobom, aby bolo jednoduchšie na program zaútočiť. Túto časť kódu bližšie analyzujeme vo vzorovom riešení.
 
 Zároveň bolo potrebné modifikovať zapojenie hardvéru, keďže pôvodný program nebol implementovaný pre mikrokontrolér ATMega328P. Pre zapojenie hardvéru budú potrebné nasledovné komponenty:
 \begin{itemize}
     \item ATMega328P-PU -- THT púzdro
-    \item kontaktné nepájivé pole
+    \item kontaktné bez-spájkové pole
     \item modul PN532 pre čítanie RFID kariet pomocou NFC (Near Field Communication) -- zapojíme cez rozhranie SPI (Serial Peripheral Interface)
     \item rezistory -- 4-krát 330 $\Omega$ k LED
     \item 4 kusy LED -- rôzne farby (červená, zelená, žltá, biela)
@@ -69,10 +69,58 @@ Najskôr zapojíme základné komponenty k mikrokontroléru podľa zapojenia z o
 
 \begin{figure}
     \centerline{\includegraphics[width=1\textwidth]{images/schemeRFID.png}}
-    \caption[Schéma zapojenia mikrokontroléra v príklade 2]{Schéma zapojenia mikrokontroléra v príklade 2 -- Čítačka RFID kariet. Okrem znázorneného zapojenia sú k mikrokontroléru pripojené aj základné súčiastky z obrázku \ref{obr:schemeATMega}. (Zapojenie Žltej LED sme pre jednoznačnosť uviedli aj v tomto obrázku.)}
+    \caption[Schéma zapojenia mikrokontroléra v príklade 2]{Schéma zapojenia mikrokontroléra v príklade 2 -- Čítačka RFID kariet. Okrem znázorneného zapojenia sú k mikrokontroléru pripojené aj základné súčiastky z obrázku \ref{obr:schemeATMega}. (Zapojenie žltej LED sme pre jednoznačnosť uviedli aj v tomto obrázku.)}
     \label{obr:schemeRFID}
 \end{figure}
 
-Teraz môžeme nahrať a spustiť program na cieľovom ATMega328P. Po spustení program za chvíľu, rovnako ako v prvom príklade, pošle správu na sériový port, že bol úspešne naštartovaný. V prípade, že sa nepodarí nadviazať komunikáciu s modulom PN532 pre čítanie RFID kariet, program pošle chybovú hlášku. Pokiaľ nastane tento problém, pravdepodobne ide o nesprávne zapojenie hardvéru. Pokiaľ všetko prebehne správne, spustí sa hlavný cyklus, v ktorom sa program pokúsi prečítať RFID kartu podľa štandardu ISO443A. Pokiaľ čítačka žiadnu čipovú kartu nedeteguje, pošle na sériový port správu, že čaká na priloženie karty. Tento proces sa periodicky opakuje. Po priložení karty a úspešnom prečítaní, sa na krátku chvíľu rozsvieti biela LED na indikáciu, že čítanie bolo úspešné. Následne sa rozsvieti červená alebo zelená LED, ktorá indikuje zamietnutie, resp. povolenie prístupu, zároveň program pošle príslušnú správu na sériový port. Program je nastavený tak, aby udelil prístup jedinej čipovej karte a to karte s konkrétnym ID (0x348BD1A3 v poradí od najvýznamnejšieho bajtu). Zadaním tejto úlohy je pomocou indukovania chýb prinútiť mikrokontrolér, aby udelil prístup (indikované rozsvietením zelenej LED) po prečítaní karty s nesprávnym ID, ktorej prístup nemal udeliť.
+Teraz môžeme nahrať a spustiť program na cieľovom ATMega328P. Po spustení program za chvíľu, rovnako ako v prvom príklade, pošle správu na sériový port, že bol úspešne naštartovaný. V prípade, že sa nepodarí nadviazať komunikáciu s modulom PN532 pre čítanie RFID kariet, program pošle chybovú hlášku. Pokiaľ nastane tento problém, pravdepodobne ide o nesprávne zapojenie hardvéru. Pokiaľ všetko prebehne správne, spustí sa hlavný cyklus, v ktorom sa program pokúsi prečítať čipovú kartu podľa štandardu ISO14443A. Pokiaľ čítačka žiadnu čipovú kartu nedeteguje, pošle na sériový port správu, že čaká na priloženie karty. Tento proces sa periodicky opakuje. Po priložení karty a úspešnom prečítaní, sa na krátku chvíľu rozsvieti biela LED na indikáciu, že čítanie bolo úspešné. Následne sa rozsvieti červená alebo zelená LED, ktorá indikuje zamietnutie, resp. povolenie prístupu, zároveň program pošle príslušnú správu na sériový port. Program je nastavený tak, aby udelil prístup jedinej čipovej karte a to karte s konkrétnym UID (Unique Identifier) rovným 0x348BD1A3 (v poradí od najvýznamnejšieho bajtu). Zadaním tejto úlohy je pomocou indukovania chýb prinútiť mikrokontrolér, aby udelil prístup (indikované rozsvietením zelenej LED) po prečítaní karty s nesprávnym ID, ktorej prístup nemal udeliť.
 
 \subsection{Vzorové riešenie}
+Opäť bude prvým krokom analýza zdrojového kódu. Rozhodnutie o udelení prístupu program urobí na základe návratovej hodnoty (typu bool) funkcie \uv{checkAccess}. Hlavná časť funkcie \uv{checkAccess} je napísaná v jazyku asembler (s využitím C Inline Assembly \cite{inlineAsm}). Ako prvé funkcia nastaví návratovú hodnotu na nulu (prístup zamietnutý). Zároveň vynuluje register R0. Následne sa spustí séria porovnaní, bajt po bajte, medzi UID prečítaným z priloženej čipovej karty (v registroch) a staticky definovaným UID karty, ktorej má byť prístup udelený. Jedno porovnanie pozostáva zo samotného porovnania registra s konštantou a podmieneného skoku, ktorý preskočí práve jednu inštrukciu v prípade rovnosti. Inštrukcia, ktorú skok preskočí je inkrement registra R0, ktorý sa tým pádom vykoná iba v prípade, že porovnanie skončilo nenulovým výsledkom. Ukážka tejto časti kódu v jazyku asembler je v algoritme \ref{alg:asmCTF2}. Týmto spôsobom sa porovná najskôr dĺžka prečítaného UID (podľa štandardu ISO14443A môže UID mať dĺžku štyri alebo sedem bajtov) a následne najmenej významné štyri bajty prečítaného UID. 
+
+Pokiaľ všetky porovnania skončili nulovým výsledkom (rovnosť) v registry R0 zostane inicializovaná hodnota nula, v opačnom prípade bude R0 obsahovať nenulovú hodnotu (aspoň jeden inkrement sa vykoná). Na záver sa vykoná test na nulu registra R0, pokiaľ bola hodnota nulová do registra obsahujúceho návratovú hodnotu funkcie sa zapíše hodnota jeden (čo znamená \uv{prístup povolený}). V prípade, že by priložená karta mala UID dĺžky inej ako štyri bajty, nebudú sa rovnať dĺžky, teda prvé porovnanie skončí nenulovou hodnotou a prístup nebude udelený.
+
+\begin{lstlisting}[float,language=AVR,caption={Ukážky kódu v asembleri z funkcie \uv{checkAccess} z príkladu 2. \%0 označuje výstupný parameter -- register s návratovou hodnotou, \%1, \%3 registre s prečítanými hodnotami a \%2, \%4 staticky delkarované konštanty.},label=alg:asmCTF2]
+; inicializácia -- vynulovanie registrov
+clr %0
+eor r0, r0
+
+; ukážka porovnania jedného bajtu
+cpi %1, %2      ; porovnanie prečítanej dĺžky UID
+breq skip_1     ; podmienený skok ak nastala rovnosť
+inc r0          ; inkrement registra R0
+
+skip_1:         ; návestie pred ďalším porovnaním
+cpi %3, %4      ; porovnanie prvého bajtu UID
+; ...
+
+; ...
+breq skip_5     ; podmienený skok po poslednom porovnaní
+inc r0          ; inkrement registra R0
+
+skip_5:         ; návestie pred záverečným testom R0
+tst r0          ; test na nulu registra R0
+
+; na túto inštrukciu cielime útok:
+brne fail       ; podmienený skok ak R0 bol nenulový
+
+ldi %0, 0x01    ; uloženie hodnoty 1 do výstupu
+fail:
+nop             ; posledná inštrukcia v asembleri
+
+; nasleduje návrat z funkcie (už v jazyku C)
+\end{lstlisting}
+
+Výsledok celého porovnania teda závisí na jednom podmienenom skoku (po záverečnom teste registra R0). Pokiaľ sa tento skok nevykoná návratová hodnota z funkcie bude jeden a prístup bude udelený. Zároveň hneď pred zavolaním funkcie \uv{checkAccess}, na ktorú chceme útok zacieliť, je v programe volanie funkcie \uv{digitalWrite}, ktorá rozsvieti bielu LED. Pomocou tohto signálu môžeme, rovnako ako v príklade 1, synchronizovať útok s cieľovým mikrokontrolérom.
+
+Opäť budeme na program útočiť pomocou zapojenia s tranzistorom, z kapitoly \ref{kap:utoky}. Keďže budeme cieliť na konkrétnu inštrukciu, tentokrát bude útok riadený pomocou dosky Discovery, o ktorej sme ukázali, že má väčšiu presnosť ako doska Nano. Zapojenie útočiaceho hardvéru je podobné ako v príklade 1, jeho schéma je na obrázku \ref{obr:schemeCTF-RFID}. Pre posielanie správ o nastavených parametrov útoku z dosky Discovery do počítača sme pripojili ďalší prevodník z USB na UART (rovnaký model ako v zapojení z obrázku \ref{obr:schemeATMega}), podobne ako pri útoku v kapitole \ref{kap:utoky}. Program pre riadenie útoku bude opäť rovnaký ako v kapitole \ref{kap:utoky} (program pre dosku Discovery), akurát bude znova potrebné nastaviť rozsah parametra odstup, ktorý sa bude s každým pokusom automaticky inkrementovať. Rozsah parametra odstup sme nastavili od jeden po päťdesiat.
+
+\begin{figure}
+    \centerline{\includegraphics[width=1\textwidth]{images/schemeCTF-RFID.png}}
+    \caption[Schéma zapojenia pre útok na príklad 2]{Schéma zapojenia pre útok na príklad 2 -- Čítačka RFID kariet. Opäť, kvôli prehľadnosti, nie sú znázornené súčiastky zo zapojení \ref{obr:schemeATMega} a \ref{obr:schemeRFID}, ktoré je tiež potrebné k ATMega328P pridať. (Zapojenie bielej LED sme pre jednoznačnosť uviedli aj v tomto obrázku.)}
+    \label{obr:schemeCTF-RFID}
+\end{figure}
+
+Útok sme  sme implementovali podľa uvedeného postupu. Po postupnom prekladaní čipovej karty (s UID, ktorému program nemá povoliť prístup) k čítačke sa zakaždým spustil útok riadený doskou Discovery. Útok bol synchronizovaný na základe signálu, ktorý vyslal cieľový mikrokontrolér tým, že po priložení karty rozsvietil bielou LED na upozornenie, že úspešne prečítal čipovú kartu. Po každom pokuse o útok doska Discovery automaticky zväčšila parameter odstup až kým sa úspešne podarilo dosiahnuť, aby mikrokontrolér zasvietil zelenou LED a zároveň poslal správu \uv{prístup povolený}, napriek tomu, že priložená karta nemala mať povolený prístup. (UID bolo rôzne od 0x348BD1A3 čo je jediné, ktorému program udelí prístup.) Hodnoty parametra odstup, pri ktorých sa útok úspešne podaril boli 31 a 32. Pri menšej, alebo väčšej hodnote buď program prístup zamietol (bez navonok známok poruchy), alebo zlyhal a mikrokontrolér sa reštartoval.
+
+Následne sme sa pokúsili útok zopakovať riadením pomocou dosky Nano. Tentokrát bol však útok neúspešný pre všetky hodnoty parametra odstup v rozmedzí 1 -- 20. Väčšie hodnoty nemalo zmysel skúšať, keďže rádovo presahujú očakávané časove oneskorenie od prijatia signálu po vykonanie cieľovej inštrukcie.
