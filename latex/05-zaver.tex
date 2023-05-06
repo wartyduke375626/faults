@@ -2,25 +2,14 @@
 \addcontentsline{toc}{chapter}{Záver} % rucne pridanie do obsahu
 \markboth{Záver}{Záver} % vyriesenie hlaviciek
 
-Na záver už len odporúčania k samotnej kapitole Záver v bakalárskej
-práci podľa smernice:  \uv{V závere je potrebné v
-stručnosti zhrnúť dosiahnuté výsledky vo vzťahu k stanoveným
-cieľom. Rozsah záveru je minimálne dve strany. Záver ako kapitola sa
-nečísluje.}
+Hlavným cieľom tejto práce bolo zistiť či aj lacným hardvérom možno úspešne zaútočiť pomocou indukovania chýb a cielene tak ovplyvniť správanie hardvéru. Najdôležitejším výsledkom bolo, že aj pomocou veľmi jednoduchého mikrokontroléra ako je ATMega328P (súčasť dosky Arduino Nano) vieme dosiahnuť vynechanie vybranej inštrukcie. Ďalej sme overili, že presnosť, ktorú nám ATMega328P poskytuje je pomerne obmedzená a útok na reálny program by bol s vysokou pravdepodobnosťou neúspešný. S využitím o čosi drahšieho (stále však veľmi lacného) prístupu, pomocou dosky STM32 F4 Discovery, sa nám podarilo o jeden rád zlepšiť presnosť útoku, čo umožnilo s väčšou úspešnosťou trafiť cielenú inštrukciu.
 
-Všimnite si správne písanie slovenských úvodzoviek okolo
-predchádzajúceho citátu, ktoré sme dosiahli príkazom \verb'\uv'.
+Pri implementácii jednotlivých útokov sme využili techniku zmeny napätia, konkrétne sme porovnali dva prístupy -- zapojenie pomocou tranzistora a využitie hradlového ovládača. Zapojenie s tranzistorom, ktoré sme prevzali z útoku na firmvér v rámci súťaže CTF \cite{vccOnTheCheap}, sa nám podarilo vylepšiť pridaním zdvíhacieho odporu. Pri obidvoch zapojeniach (tranzistor aj hradlový ovládač) sme priebeh zmeny napätia analyzovali pomocou osciloskopu. Prekvapivým výsledkom bolo, že napriek teoreticky lepšiemu priebehu zmeny napätia pri zapojení s hradlovým ovládačom, malo zapojenie s tranzistorom väčšiu úspešnosť útokov. Ukázali sme teda, že v niektorých prípadoch môže zapojenie s pomalšími súčiastkami kompenzovať malú presnosť riadiaceho hardvéru. Respektíve, nie je potrebný pokles napätia až na 0 V, naopak lepší a zároveň postačujúci je pokles len na úroveň napríklad 2 V. Slabší pokles napätia stačil na vynechanie inštrukcie a zároveň nenastal reštart mikrokontroléra.
 
-V informatických prácach niekedy býva záver kratší ako dve strany, ale
-stále by to mal byť rozumne dlhý text, v rozsahu aspoň jednej strany.
-Okrem dosiahnutých cieľov sa zvyknú rozoberať aj otvorené problémy a
-námety na ďalšiu prácu v oblasti.
+Zároveň sme upravili pôvodný zdrojový kód pre riadiaci hardvér útoku \cite{vccOnTheCheap} prepísaním dôležitých častí kódu do jazyka asembler, čím sme značne zlepšili presnosť časovania útoku. Tým sme ukázali, že aj malé oneskorenie, spôsobené napríklad volaním funkcie, môže prekážať úspešnosti útoku. Navyše sme pozorovali, že ten istý útok (rovnaký hardvér, zapojenie, program) môže mať rôzny vplyv na exempláre toho istého mikrokontroléra z rôznej série výroby.
 
-Abstrakt, úvod a záver práce obsahujú podobné informácie. Abstrakt je
-kratší text, ktorý má pomôcť čitateľovi sa rozhodnúť, či vôbec prácu
-chce čítať. Úvod má umožniť zorientovať sa v práci skôr než ju začne
-čítať a záver sumarizuje najdôležitejšie veci po tom, ako prácu
-prečítal, môže sa teda viac zamerať na detaily a využívať pojmy
-zavedené v práci.
+Výsledky analýzy útokov sme následne demonštrovali v rámci ukážky útoku na dva jednoduché programy. V obidvoch prípadoch sa nám podarilo úspešne zaútočiť na daný program s využitím znalostí zistených pri podrobnej analýze útoku využívajúcom zapojenie s tranzistorom. Naša demonštrácia aplikácie útokov využívala však programy cielene implementované tak, aby bolo na ne možné jednoducho zaútočiť. Priamym nadviazaním na našu prácu by preto mohlo byť overenie ako použiteľné je nami použité zapojenie s tranzistorom a riadiacim hardvérom pri útoku na reálny firmvér skutočného produkčného zariadenia. Ďalšou zaujímavou otázkou je, či môže aj samotný kompilátor pomôcť odolnosťou voči útokom pomocou indukovania chýb. Napríklad vkladaním náhodných oneskorení, používaním netriviálnych konštánt (rôznych od 0x00, 0x01) a pod.
 
+Ďalším výsledkom práce je, že sa nepodarilo dosiahnuť iný druh chyby ako vynechanie inštrukcie. Pre indukovanie iného typu chýb, napríklad ovplyvnenie výsledku inštrukcie, bola presnosť hardvéru nedostatočná, prípadne by bolo potrebné použiť zapojenie s iným princípom zmeny napätia alebo inú techniku indukovania chýb. Námetov na ďalšie práce týkajúce sa útokov pomocou indukovania chýb je viacero. Príkladom môže byť analýza iných techník spomenutých aj v tejto práci ako manipulácia hodín a elektromagnetické rušenie. Rovnako sa možno venovať aj obranným mechanizmom voči indukovaniu chýb, či už vývojom aktívnych mechanizmov pre detekciu takýchto útokov alebo návrhom bezpečného písania, dokonca aj kompilovania programov, ktoré by mohli skomplikovať, prípadne úplne znemožniť jednotlivé útoky.
 
+Útoky na hardvér pomocou indukovania chýb predstavujú reálnu hrozbu a je potrebné pri návrhu, najmä bezpečnostných zariadení, aj s takýmto scenárom útoku počítať. Našou prácou sme poukázali na to, že útok pomocou indukovania chýb možno potenciálne realizovať aj s minimálnymi nákladmi. Pri návrhu systému je preto dôležité myslieť nie len na bezpečnosť softvéru, ale rovnako aj na bezpečnosť samotného hardvéru, ktorý bude v konečnom dôsledku daný softvér vykonávať.

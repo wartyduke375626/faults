@@ -16,10 +16,12 @@
 
 % balicek na vkladanie zdrojoveho kodu
 \usepackage{listings}
-% ukazky kodu su cislovane ako Listing 1,2,...
-% tu je Listing zmenene na Algoritmus 1,2,...
+
+% nastavenia balicka listings
 \renewcommand{\lstlistingname}{Algoritmus}
-\lstset{extendedchars=true, literate=
+\lstset{extendedchars=true, basicstyle=\small, frame=lines,
+    commentstyle=\color{olive}\textit, keywordstyle=[1]\color{blue},
+    literate=
     {á}{{\'a}}1 {ä}{{\"a}}1 {č}{{\v{c}}}1 {ď}{{\v{d}}}1 {é}{{\'e}}1 {í}{{\'i}}1
     {ĺ}{{\'l}}1 {ľ}{{\v{l}}}1 {ň}{{\v{n}}}1 {ó}{{\'o}}1 {ô}{{\^o}}1 {š}{{\v{s}}}1
     {ť}{{\v{t}}}1 {ú}{{\'u}}1 {ý}{{\'y}}1 {ž}{{\v{z}}}1
@@ -27,22 +29,11 @@
     {Ľ}{{\v{L}}}1 {Ň}{{\v{N}}}1 {Ó}{{\'O}}1 {Š}{{\v{S}}}1 {Ť}{{\v{T}}}1 {Ú}{{\'U}}1
     {Ý}{{\'Y}}1 {Ž}{{\v{Z}}}1
 }
-\lstdefinestyle{styleC}{
-    keywordstyle=[1]\color{blue},
-    commentstyle=\color{olive}\textit
-}
 \lstdefinelanguage{AVR}{
     keywords={clr, eor, cpi, breq, inc, tst, brne, ldi, nop, add, sub, mov, or, dec, ldr, str},
-    keywordstyle=[1]\color{blue},
     sensitive=false,
     comment=[l]{;},
-    commentstyle=\color{olive}\textit
 }
-% nastavenia balicka listings
-% mozete pridat aj language=...
-% na nastavenie najcastejsie pouzivaneho prog. jazyka
-% takisto sa da zapnut cislovanie riadkov
-\lstset{frame=lines}
 
 % balicek na vkladanie obrazkov
 \usepackage{graphicx}
@@ -75,15 +66,9 @@
 
 \def\mfmiesto{Bratislava, \mfrok}
 
-% študenti BIN a DAV odkomentujú príslušnú dvojicu riadkov
 \def\mfodbor{ Informatika}
 \def\program{ Informatika }
-% pre BIN:
-%\def\mfodbor{ Informatika a Biológia }
-%\def\program{ Bioinformatika }
-% pre DAV:
-%\def\mfodbor{ Informatika a Matematika } 
-%\def\program{ Dátová veda }
+
 
 % Ak je školiteľ z FMFI, uvádzate katedru školiteľa, zrejme by mala byť aj na zadaní z AIS2
 % Ak máte externého školiteľa, uvádzajte Katedru informatiky 
@@ -180,9 +165,7 @@ Fakulta matematiky, fyziky a informatiky
 ~
 
 \vfill
-{\bf Poďakovanie:} Tu môžete poďakovať školiteľovi, prípadne
-ďalším osobám, ktoré vám s prácou nejako pomohli, poradili,
-poskytli dáta a podobne.
+{\bf Poďakovanie:} Ďakujem vedúcemu bakalárskej práce RNDr. Richardovi Ostertágovi, PhD. za odborné pripomienky a rady k ...[Dokončiť]
 
 % --- Koniec poďakovania
 
@@ -192,13 +175,9 @@ poskytli dáta a podobne.
 \newpage 
 \section*{Abstrakt}
 
+Vplyvom externých fyzikálnych faktorov (zmena napájania, elektromagnetické rušenie a pod.) je možné ovplyvniť činnosť hardvéru až do takej miery, že nekorektne vykoná niektorú operáciu. Indukovanie chýb je technika útoku, ktorá zneužíva toto správanie a možno pomocou nej cielene zaútočiť na konkrétny hardvér. Pri správnom načasovaní na konkrétnu časť programu je možné cielene ovplyvniť daný hardvér, napríklad s účelom obísť bezpečnostný mechanizmus alebo narušiť implementáciu kryptografického algoritmu. Cieľom práce je overiť, či aj lacným hardvérom možno realizovať úspešný útok. Zároveň sa v práci zaoberáme podrobnou analýzou vybraných útokov a ich možným dopadom na konkrétny hardvér (mikrokontrolér ATMega328P). Cieľom je aj zistiť aké možnosti pre útočníka lacný hardvér poskytuje. Výsledky analýzy na záver demonštrujeme úspešnými útokmi na jednoduché príklady programov.
 
-Slovenský abstrakt v rozsahu 100-500 slov, jeden odstavec. Abstrakt
-stručne sumarizuje výsledky práce. Mal by byť pochopiteľný pre bežného
-informatika. Nemal by teda využívať skratky, termíny alebo označenie
-zavedené v práci, okrem tých, ktoré sú všeobecne známe.
-
-\paragraph*{Kľúčové slová:} jedno, druhé, tretie (prípadne štvrté, piate)
+\paragraph*{Kľúčové slová:} indukovanie chýb, mikrokontrolér, zmena napájania
 % --- Koniec Abstrakt - Slovensky
 
 
@@ -208,11 +187,10 @@ zavedené v práci, okrem tých, ktoré sú všeobecne známe.
 \newpage 
 \section*{Abstract}
 
-Abstract in the English language (translation of the abstract in the
-Slovak language).
+The influence of external physical factors (power supply changes, electromagnetic interference, etc.) can affect the operation of hardware to such an extent that it may incorrectly execute an operation. Fault injection is an attack technique that exploits this behavior and can be used to attack specific hardware. By proper timing and targeting a specific part of a program, it is possible to deliberately influence the targeted hardware, for example, to bypass a security mechanism or cause faults in an implementation of a cryptographic algorithm. The goal of this thesis is to verify whether successful attacks can also be performed using inexpensive hardware. Additionally, the thesis focuses on a detailed analysis of selected attacks and their potential impact on specific hardware (the ATMega328P microcontroller). The aim is also to explore what capabilities inexpensive hardware to an attacker provides. The analysis results are demonstrated by successful attacks on simple program examples.
 
 
-\paragraph*{Keywords:} 
+\paragraph*{Keywords:} fault injection, microcontroller, power glitch
 
 % --- Koniec Abstrakt - Anglicky
 
@@ -308,8 +286,6 @@ Slovak language).
 %Nepovinná časť prílohy obsahuje materiály, ktoré neboli zaradené priamo  do textu. Každá príloha sa začína na novej strane.
 %Zoznam príloh je súčasťou obsahu.
 %
-\input priloha-A.tex
-
-\input priloha-B.tex
+\input 06-prilohaCD.tex
 
 \end{document}

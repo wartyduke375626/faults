@@ -28,9 +28,10 @@ bool checkAccess(uint8_t* uid, uint8_t uidLength) {
     register uint8_t uidByte1 = uid[1];
     register uint8_t uidByte2 = uid[2];
     register uint8_t uidByte3 = uid[3];
-    register uint8_t result = 0;
+    register uint8_t result;
 
     __asm__ volatile ( \
+        "clr %0"            "\n\t" \
         "eor r0, r0"        "\n\t" \
         "cpi %1, %2"        "\n\t" \
         "breq skip_1"       "\n\t" \

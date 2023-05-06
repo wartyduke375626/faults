@@ -1,10 +1,9 @@
 \chapter{Implementácia a analýza vybraných útokov}
-
 \label{kap:utoky}
 
-V tejto kapitole podrobne popíšeme vybrané útoky na konkrétny hardvér, ktoré sme sa pokúsili implementovať. Zároveň sme niektoré útoky aj podrobnejšie analyzovali a následne sme sa ich pokúsili vylepšiť z hľadiska hardvéru aj softvéru. Naším cieľom bolo najmä overiť technickú náročnosť realizácie vybraných útokov a zistiť, či aj nami zvolený lacný hardvér je na takéto útoky použiteľný. Pri niektorých zapojeniach sme sa pokúsili aj presnejšie určiť (experimentálne) ako vieme ovplyvniť beh cieľového algoritmu na úrovni inštrukcií v jazyku asembler.
+V tejto kapitole podrobne popíšeme vybrané útoky na konkrétny hardvér, ktoré sme sa pokúsili implementovať. Zároveň sme niektoré útoky aj podrobnejšie analyzovali a následne sme sa ich pokúsili vylepšiť z hľadiska hardvéru aj softvéru. Naším cieľom bolo najmä overiť technickú náročnosť realizácie vybraných útokov a zistiť, či aj nami zvolený lacný hardvér je na takéto útoky použiteľný. Pri niektorých zapojeniach sme sa pokúsili aj presnejšie určiť (experimentálne) ako vieme ovplyvniť beh cieľového algoritmu na úrovni inštrukcií v jazyku asembler. Zdrojové kódy programov použitých na riadenie jednotlivých útokov ako aj programov, na ktoré sme útočili sa nachádzajú v elektronickej prílohe priloženej k práci.
 
-\section{Útok na firmvér zo súťaže CTF}
+\section{Útok na firmvér zo súťaže CTF} \label{kap3:sek:utokNaFirmverCTF}
 Ako prvé sme sa pokúsili zreprodukovať popísaný útok na firmvér, ktorý bol realizovaný v rámci súťaže CTF (Capture The Flag) \cite{vccOnTheCheap}. Program po spustení periodicky posiela cez rozhranie UART správu \uv{Lock}. Po úspešnom útoku by mal poslať \uv{tajný flag}, ktorého obsah je cieľom tejto súťaže. Potrebný hardvér pre realizáciu tohto útoku je nasledovný:
 \begin{itemize}
     \item Arduino UNO R3 -- použili sme klon, obsahuje vyberateľný čip ATMega328P v THT púzdre
@@ -14,10 +13,10 @@ Ako prvé sme sa pokúsili zreprodukovať popísaný útok na firmvér, ktorý b
     \item rezistory -- použili sme 2-krát 330 $\Omega$, (potrebný odpor sa môže líšiť v závislosti od použitého tranzistora)
     \item prepojovacie kábliky typu M-M
 \end{itemize}
-Čo sa týka softvéru je potrebný ISP programátor, ktorý dokáže nahrať firmvér na mikrokontrolér ATMega328P a kompilátor jazyka C pre architektúru AVR. Použili sme integrované vývojové prostredie (IDE) Arduino IDE, ktoré poskytuje automatizovaný spôsob kompilovania a nahrávania firmvéru, podporujúce aj náš ATMega328P. Firmvér, na ktorý chceme útočiť bol zverejnený priamo v skompilovanom HEX (Hexadecimal) obraze strojového kódu a pre nahranie takéhoto kódu sme použili open source projekt AVRDUDE, ktorý interne používa aj Arduino IDE.
+Čo sa týka softvéru je potrebný ISP programátor, ktorý dokáže nahrať firmvér na mikrokontrolér ATMega328P a kompilátor jazyka C pre architektúru AVR. Použili sme integrované vývojové prostredie (IDE) Arduino IDE, ktoré poskytuje automatizovaný spôsob kompilovania a nahrávania firmvéru, podporujúce aj náš ATMega328P. Firmvér, na ktorý chceme útočiť bol zverejnený priamo v skompilovanom HEX (Hexadecimal) obraze strojového kódu a pre nahranie takéhoto kódu sme použili open source projekt AVRDUDE \cite{avrdude}, ktorý interne používa aj Arduino IDE.
 
 \subsection{Postup útoku}
-Postup kopíruje popis pôvodného útoku \cite{vccOnTheCheap}. Ako prvé potrebujeme nahrať firmvér, na ktorý budeme útočiť na mikrokontrolér ATMega328P, ktorý je súčasťou dosky Arduino UNO. Doska obsahuje prevodník z USB na UART, čo zjednodušuje celý postup. Prevodník na doske pripojíme k počítaču a nahráme firmvér zo súťaže pomocou softvéru AVRDUDE \cite{vccOnTheCheap}. Uvádzame aj použitý príkaz pre nahratie firmvéru zo súboru \uv{fiesta.hex} \cite{vccOnTheCheap}:\\
+Postup kopíruje popis pôvodného útoku \cite{vccOnTheCheap}. Ako prvé potrebujeme nahrať firmvér, na ktorý budeme útočiť na mikrokontrolér ATMega328P, ktorý je súčasťou dosky Arduino UNO. Doska obsahuje prevodník z USB na UART, čo zjednodušuje celý postup. Prevodník na doske pripojíme k počítaču a nahráme firmvér zo súťaže pomocou softvéru AVRDUDE \cite{avrdude}. Uvádzame aj použitý príkaz pre nahratie firmvéru zo súboru \uv{fiesta.hex} \cite{vccOnTheCheap} (súbor sa nachádza aj v elektronickej prílohe):\\
 \footnotesize \indent {\color{olive} avrdude -c arduino -p atmega328p -p /dev/<Zariadenie> -b115200 -u -V -U flash:w:fiesta.hex}\\
 \normalsize
 
@@ -31,7 +30,7 @@ Postup kopíruje popis pôvodného útoku \cite{vccOnTheCheap}. Ako prvé potreb
 
 Ďalej je potrebné naprogramovať Arduino Nano, aby pomocou ovládania tranzistora na krátko odpojilo napájanie ATMega328P od zeme a následne opäť pripojilo. Dĺžka časového intervalu, počas ktorého je tranzistor vypnutý, musí byť dostatočne dlhá, aby indukovala chybu na procesore, ale nie príliš dlhá, aby sa mikrokontrolér nereštartoval. Vyskúšali sme do Arduino Nano nahrať program použitý aj v pôvodnom útoku \cite{vccOnTheCheap}, ktorý bol implementovaný v prostredí Arduino IDE. Algoritmus vypne tranzistor a vykoná niekoľko prázdnych iterácií for-cyklu, po ktorom tranzistor opäť zapne. Následne sa pokúsi prečítať výstup zo sériového portu na ATMega328P. V prípade, že sa podarí prečítať \uv{flag}, útok bol úspešný. V prípade, že sa \uv{flag} nepodarí prečítať, zväčší počet iterácií for-cyklu a postup zopakuje \cite{vccOnTheCheap}. Ukážka časti kódu, ktorá ovláda tranzistor, je v algoritme \ref{alg:vccOnTheCheap}.
 
-\begin{lstlisting}[float,language=C,style=styleC,caption={Ovládanie tranzistora, ktorý spína napájanie na ATMega328P. Prevzaté zo zdrojového kódu pôvodného útoku \cite{vccOnTheCheap}.},label=alg:vccOnTheCheap]
+\begin{lstlisting}[float,language=C,caption={Ovládanie tranzistora, ktorý spína napájanie na ATMega328P. Prevzaté zo zdrojového kódu pôvodného útoku \cite{vccOnTheCheap}. Cieľom premennej \uv{waste} je zabrániť, aby optimalizácia kompilátora odstránila for-cyklus.},label=alg:vccOnTheCheap]
 int waste = 0;
 digitalWrite(powerPin, LOW);
 for (int i=0; i<glitchDelay; i++){ waste++; }                    
@@ -40,13 +39,13 @@ glitchDelay += 10;
 \end{lstlisting}
 
 \subsection{Výsledok, analýza a vylepšenie útoku}
-Útok bol vyskúšaný na štyri čipy ATMega328P. Na dvoch z nich (z rovnakej série výroby) sa útok úspešne podaril s podobným výsledkom ako v pôvodnom útoku \cite{vccOnTheCheap}. \uv{Flag} sa dokonca podarilo prečítať už pri nulovom počte iterácií for-cyklu, postačoval najkratší možný výpadok -- vypnutie a okamžité zapnutie tranzistora pomocou funkcie \uv{digitalWrite} z knižnice prostredia Arduino IDE. Na druhých dvoch exemplároch (z inej série výroby) útok nebol úspešný a aj pri tom najkratšom možnom výpadku sa mikrokontrolér reštartoval. Rozhodli sme sa preto napätie na mikrokontroléri počas útoku podrobne analyzovať pomocou osciloskopu MDO4104C, ktorý sme stručne uviedli v kapitole \ref{kap:hardver}. Pre tento účel sme sa rozhodli ATMega328P zapojiť na kontaktom bez-spájkovom poli bez dosky Arduino UNO. Schému a detaily tohto zapojenia sme popísali v kapitole \ref{kap:hardver} a na obrázku \ref{obr:schemeATMega}. Takéto zapojenie umožňuje jednoducho meniť zapojené elektronické súčiastky, čo poskytuje väčšiu flexibilitu vo voľbe parametrov týchto súčiastok pri analýze.
+Útok bol vyskúšaný na štyri čipy ATMega328P. Na dvoch z nich (z rovnakej série výroby) sa útok úspešne podaril s podobným výsledkom ako v pôvodnom útoku \cite{vccOnTheCheap}. \uv{Flag} sa dokonca podarilo prečítať už pri nulovom počte iterácií for-cyklu, postačoval najkratší možný výpadok -- vypnutie a okamžité zapnutie tranzistora pomocou funkcie \uv{digitalWrite} z knižnice prostredia Arduino IDE. Na druhých dvoch exemplároch (z inej série výroby) útok nebol úspešný a aj pri tom najkratšom možnom výpadku sa mikrokontrolér reštartoval. Rozhodli sme sa preto napätie na mikrokontroléri počas útoku podrobne analyzovať pomocou osciloskopu MDO4104C, ktorý sme stručne uviedli v sekcii \ref{kap2:sek:osciloskop}. Pre tento účel sme sa rozhodli ATMega328P zapojiť na kontaktom bez-spájkovom poli bez dosky Arduino UNO. Schému a detaily tohto zapojenia sme popísali v kapitole \ref{kap:hardver} a na obrázku \ref{obr:schemeATMega}. Takéto zapojenie umožňuje jednoducho meniť zapojené elektronické súčiastky, čo poskytuje väčšiu flexibilitu vo voľbe parametrov týchto súčiastok pri analýze.
 
-Pomocou osciloskopu sa podarilo určiť priebeh zmeny napätia na mikrokontroléri v čase s presnosťou na rádovo stovky nanosekúnd. Zistili sme, že interval, počas ktorého nastalo podpätie bol príliš dlhý (približne 2 {\textmu}s), čo pri útoku na 2 čipy zo štyroch spôsobilo reštart mikrokontroléra. Ďalším zaujímavým pozorovaním bol fakt, že časový interval podpätia sa nepredlžoval so zväčšovaním počtu iterácií \uv{prázdneho} for-cyklu. Dôvodom bola optimalizácia kompilátora, ktorý sa oprávnene rozhodol zdanlivo \uv{zbytočný} for-cyklus odstrániť.
+Pomocou osciloskopu sa podarilo určiť priebeh zmeny napätia na mikrokontroléri v čase s presnosťou na rádovo stovky nanosekúnd. Zistili sme, že interval, počas ktorého nastalo podpätie bol príliš dlhý (približne 2 {\textmu}s), čo pri útoku na 2 čipy zo štyroch spôsobilo reštart mikrokontroléra. Ďalším zaujímavým pozorovaním bol fakt, že časový interval podpätia sa nepredlžoval so zväčšovaním počtu iterácií \uv{prázdneho} for-cyklu. Dôvodom bola optimalizácia kompilátora, ktorý sa oprávnene rozhodol zdanlivo \uv{zbytočný} for-cyklus odstrániť, napriek inkrementu premennej \uv{waste} v tele for-cyklu.
 
-Doska Arduino Nano, ktorá ovládala tranzistor obsahuje tiež mikrokontrolér ATMega328P, s externým oscilátorom s frekvenciou 16 MHz. V kapitole \ref{kap:hardver} sme spomenuli ukážku nastavenia výstupnej logickej hodnoty na 1, resp. 0 pomocou jedinej inštrukcie SBI, resp. CBI. Tieto inštrukcie dokáže procesor vykonať počas dvoch taktov vďaka dvojfázovej pipeline (načítanie a vykonanie inštrukcie) \cite{atmegaData}. Pri frekvencii 16 MHz to znamená, že vypnutie a opätovné zapnutie tranzistora by teoreticky malo trvať 1/4 {\textmu}s (perióda jedného taktu -- 1/16 {\textmu}s $\cdot$ 4 takty -- vykonanie inštrukcií SBI a CBI). 
+Doska Arduino Nano, ktorá ovládala tranzistor obsahuje tiež mikrokontrolér ATMega328P, s externým oscilátorom s frekvenciou 16 MHz. V kapitole \ref{kap:hardver} (v sekcii \ref{kap2:sek:ATMega328P}) sme spomenuli ukážku nastavenia výstupnej logickej hodnoty na 1, resp. 0 pomocou jedinej inštrukcie SBI, resp. CBI. Tieto inštrukcie dokáže procesor vykonať počas dvoch taktov vďaka dvojfázovej pipeline (načítanie a vykonanie inštrukcie) \cite{atmegaData}. Pri frekvencii 16 MHz to znamená, že vypnutie a opätovné zapnutie tranzistora by teoreticky malo trvať 1/4 {\textmu}s (perióda jedného taktu -- 1/16 {\textmu}s $\cdot$ 4 takty -- vykonanie inštrukcií SBI a CBI). 
 
-Rozhodli sme sa preto časti kódu, ktoré ovládajú tranzistor prepísať do jazyku asembler s využitím C Inline Assembly \cite{inlineAsm}, ktorý je podporovaný aj kompilátorom prostredia Arduino IDE. Volania funkcie \uv{digitalWrite} sme teda nahradili ekvivalentnou konštrukciou pomocou inštrukcií SBI a CBI. Následne sme útok zopakovali s takto upraveným programom nahratým na Arduino Nano. Výsledkom bolo, že podpätie na mikrokontroléri trvalo približne 1/2 {\textmu}s, čo je štyrikrát menej ako predtým. Dlhší čas v porovnaní s teoretickým časom (1/4 {\textmu}s), bol pravdepodobne spôsobený vplyvom fyzikálnych faktorov, ktoré sme v teoretickom modeli zanedbali. Pri takto krátkom čase už nenastal reštart žiadneho z testovaných čipov, ale útok bol opäť neúspešný. Interval bol pravdepodobne príliš krátky a na žiadnom z čipov sa neprejavila chyba. Ďalej sme preto upravili kód napísaním vlastnej procedúry oneskorenia v asembleri (opäť s využitím C Inline Assembly \cite{inlineAsm}). Procedúra pozostáva z inicializácie registra na kladnú hodnotu (osem-bitový parameter) a cyklu. V cykle postupne dekrementujeme tento register a následne vykonáme podmienený skok na začiatok cyklu, pokiaľ výsledok dekrementovania bol nenulový. Pseudokód procedúry v jazyku asembler uvádzame v algoritme \ref{alg:asmDelay}. Takáto procedúra umožňuje parametrizovať oneskorenie s presnosťou na trojice taktov (cyklus procedúry trvá tri takty). Po tejto úprave sa útok úspešne podaril na všetkých štyroch testovaných čipov. Útok bol zopakovaný niekoľkokrát (10--20), potrebné oneskorenia pre úspešný útok na každom z exemplárov sú zhrnuté v tabuľke \ref{tab:vccOnTheCheap2}.
+Rozhodli sme sa preto časti kódu, ktoré ovládajú tranzistor prepísať do jazyku asembler s využitím C Inline Assembly \cite{inlineAsm}, ktorý je podporovaný aj kompilátorom prostredia Arduino IDE. Volania funkcie \uv{digitalWrite} sme teda nahradili ekvivalentnou konštrukciou pomocou inštrukcií SBI a CBI. Následne sme útok zopakovali s takto upraveným programom nahratým na Arduino Nano. Výsledkom bolo, že podpätie na mikrokontroléri trvalo približne 1/2 {\textmu}s, čo je štyrikrát menej ako predtým. Dlhší čas v porovnaní s teoretickým časom (1/4 {\textmu}s), bol pravdepodobne spôsobený vplyvom fyzikálnych faktorov, ktoré sme v teoretickom modeli zanedbali. Pri takto krátkom čase už nenastal reštart žiadneho z testovaných čipov, ale útok bol opäť neúspešný. Interval bol pravdepodobne príliš krátky a na žiadnom z čipov sa neprejavila chyba. Ďalej sme preto upravili kód napísaním vlastnej procedúry oneskorenia v asembleri (opäť s využitím C Inline Assembly \cite{inlineAsm}). Procedúra pozostáva z inicializácie registra na kladnú hodnotu (osem-bitový parameter) a cyklu. V cykle postupne dekrementujeme tento register a následne vykonáme podmienený skok na začiatok cyklu, pokiaľ výsledok dekrementovania bol nenulový. Pseudokód procedúry v jazyku asembler uvádzame v algoritme \ref{alg:asmDelay}. Takáto procedúra umožňuje parametrizovať oneskorenie s presnosťou na trojice taktov (cyklus procedúry trvá tri takty). Po tejto úprave sa útok úspešne podaril na všetkých štyroch testovaných čipov. Útok bol zopakovaný niekoľkokrát, výsledky sú znázornené na obrázku \ref{obr:vccOnTheCheap}.
 
 \begin{lstlisting}[float,language=AVR,caption={Procedúra oneskorenia v asembleri. \%0 označuje vstupný parameter -- hodnota v registri.},label=alg:asmDelay]
 mov r24, %0   ; 1 takt
@@ -55,27 +54,51 @@ loop:
     brne loop   ; 2 takty pri vykonaní skoku, inak 1 takt
 \end{lstlisting}
 
-\begin{table}
-    \caption[Výsledky vylepšeného útoku zo súťaže CTF]{Výsledky vylepšeného útoku zo súťaže CTF. Každý riadok popisuje výsledok na jednom z čipov ATMega328P, na čipy zo série 2128BQY pôvodný útok nebol úspešný. Čísla v tabuľke udávajú vstupný parameter (počet cyklov) procedúry oneskorenia z algoritmu \ref{alg:asmDelay}.}
-    \label{tab:vccOnTheCheap2}
-    \begin{center}
-    \begin{tabular}{|c|c|c|c|}
-        \hline 
-        Séria čipu & Min (úspešný útok) & Max (úspešný útok) & Ideál (úspešnosť nad 90\%) \\
-        \hline
-        2139E4A & 6 & 12 & 9--10 \\
-        \hline
-        2139E4A & 4 & 11 & 10 \\
-        \hline
-        2128BQY & 3 & 11 & 7 \\
-        \hline
-        2128BQY & 4 & 12 & 8--9 \\
-        \hline
-    \end{tabular}
-    \end{center}
-\end{table}
+\begin{figure}
+    \centerline{
+    \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={Počet iterácií procedúry oneskorenia},
+            ylabel={Počet úspešných útokov},
+            xmin=4, xmax=12,
+            ymin=0, ymax=11,
+            xtick={4,5,6,7,8,9,10,11,12},
+            ytick={0,1,2,3,4,5,6,7,8,9,10},
+            legend pos=north west,
+            enlarge x limits=0.05,
+            ybar=1pt,
+            bar width=0.1
+        ]
+        \addplot[color=blue, fill=blue]
+            coordinates {
+            (4,0)(5,1)(6,1)(7,2)(8,4)(9,10)(10,10)(11,4)(12,1)
+            };
+        \addplot[color=red, fill=red]
+            coordinates {
+            (4,1)(5,0)(6,1)(7,2)(8,4)(9,6)(10,10)(11,5)(12,2)
+            };
+        \addplot[color=green, fill=green]
+            coordinates {
+            (4,2)(5,3)(6,4)(7,10)(8,10)(9,7)(10,5)(11,1)(12,0)
+            };
+        \addplot[color=yellow, fill=yellow]
+            coordinates {
+            (4,1)(5,2)(6,2)(7,6)(8,10)(9,7)(10,6)(11,2)(12,0)
+            };
+        \legend {
+            2139E4A,
+            2139E4A,
+            2128BQY,
+            2128BQY
+        };
+        \end{axis}
+    \end{tikzpicture}
+    }
+    \caption[Výsledky vylepšeného útoku zo súťaže CTF]{Výsledky vylepšeného útoku zo súťaže CTF. Histogram znázorňuje počet úspešných útokov (z desiatich) na jednotlivé čipy ATMega328P v závislosti od počtu iterácií procedúry oneskorenia z algoritmu \ref{alg:asmDelay}. Každý čip je znázornený rôznou farbou, v legende je uvedená séria príslušného čipu. Vylepšený útok bol zopakovaný desaťkrát pre každý čip a počet iterácií procedúry oneskorenia (1 -- 15), znázornené sú iba hodnoty s nenulovým počtom úspešných útokov. Na čipy zo série 2128BQY pôvodný útok nebol úspešný. Možno pozorovať, že aj čipy z rovnakej série majú rôzne výsledky.}
+    \label{obr:vccOnTheCheap}
+\end{figure}
 
-\section{Analýza zapojenia s tranzistorom}
+\section{Analýza zapojenia s tranzistorom} \label{kap3:sek:analyZaTranzistoru}
 Rozhodli sme sa ďalej podrobnejšie analyzovať priebeh napätia na mikrokontroléri medzi vypnutím a zapnutím tranzistora v predošlom útoku. Pre tento účel sme napísali jednoduchý program, ktorý periodicky zapína a vypína tranzistor. Dĺžka časového intervalu medzi vypnutím a zapnutím tranzistora je nastaviteľná pomocou analógového vstupu z potenciometra. Dĺžku tohto intervalu budeme v tejto časti udávať v počtoch iterácií procedúry oneskorenia z algoritmu \ref{alg:asmDelay}, ďalej len počet iterácií oneskorenia. Tento program sme nahrali a spustili na Arduino Nano a zapojili sme ho spolu s mikrokontrolérom ATMega328P rovnako ako vo vylepšenej verzii útoku z predošlej časti. Na vstupný analógový pin dosky Arduino Nano sme zároveň pripojili potenciometer, aby ním bolo možné regulovať počet iterácií oneskorenia. Následne sme pomocou osciloskopu MDO4104C merali priebeh napätia na mikrokontroléri, pri rôznej dĺžke intervalu medzi vypnutím a zapnutím tranzistora.
 
 Ako sme očakávali, na mikrokontroléri periodicky vznikalo podpätie. Napätie počas vypnutého tranzistora však neklesalo prudko, ale pomaly konvergovalo k hodnote približne 2 V. Po zapnutí tranzistora sa napätie vrátilo (za čas približne 300 -- 500 nanosekúnd) na pôvodnú úroveň 5 V. Dôsledkom takéhoto priebehu bol fakt, že pri kratších intervaloch medzi vypnutím a zapnutím tranzistora napätie nestihlo klesnúť ani pod hladinu 4 V, čo už priebeh programu na cieľovom ATMega328P neovplyvnilo.
@@ -98,7 +121,7 @@ Rozhodli sme sa preto ku GND pinu mikrokontroléra pripojiť zdvíhací odpor. T
     \label{obr:npnVpnp}
 \end{figure}
 
-Zároveň sme každý tranzistor vyskúšali s rôznymi hodnotami zdvíhacieho, resp. sťahovacieho odporu. Výsledky meraní sú zhrnuté v tabuľke \ref{tab:oscVoltage}, pričom \uv{víťazom}, ktorého sme sa rozhodli ponechať v zapojení pri ďalších útokoch bol tranzistor 2N2222A (NPN) so zdvíhacím odporom 330 $\Omega$ Tranzistor SS8050 mal síce kratšie časy stúpania a klesania napätia, ale minimálna úroveň napätia bola pri tejto konfigurácií nižšia. Dôvodom zvolenia veľmi nízkeho zdvíhacieho odporu 330 $\Omega$ bol fakt, že pri väčšom odpore bol rozdiel oproti zapojeniu bez zdvíhacieho odporu relatívne zanedbateľný. Bázový odpor tranzistora sme sa rozhodli zväčšiť na 1 k$\Omega$, keďže to neovplyvnilo priebeh napätia počas útoku a tranzistorom potečie menší prúd (stále dostatočný).
+Zároveň sme každý tranzistor vyskúšali s rôznymi hodnotami zdvíhacieho, resp. sťahovacieho odporu. Výsledky meraní sú zhrnuté v tabuľke \ref{tab:oscVoltage}, pričom \uv{víťazom}, ktorého sme sa rozhodli ponechať v zapojení pri ďalších útokoch bol tranzistor 2N2222A (NPN) so zdvíhacím odporom 330 $\Omega$ Tranzistor SS8050 mal síce kratšie časy stúpania a klesania napätia, ale minimálna úroveň napätia bola pri tejto konfigurácií nižšia. Dôvodom zvolenia veľmi nízkeho zdvíhacieho odporu 330 $\Omega$ bol fakt, že pri väčšom odpore bol rozdiel oproti zapojeniu bez zdvíhacieho odporu relatívne zanedbateľný. Bázový odpor tranzistora sme sa rozhodli zväčšiť na 1 k$\Omega$, keďže dochádzalo k pomerne veľkému zahrievaniu tranzistora a prúd, ktorý potečie bude stále dostatočný. Ďalej sme overili, že táto výmena neovplyvnila priebeh napätia počas útoku.
 
 \begin{table}
     \caption[Porovnanie priebehu napätia pri zapojení s rôznymi tranzistormi]{Porovnanie priebehu napätia na mikrokontroléri pri zapojení s rôznymi tranzistormi. Hodnoty v tabuľke sú priemerom zo šesťdesiatich štyroch vzoriek -- automaticky nameraných a vypočítaných pomocou funkcie osciloskopu. Napätie je zaokrúhlené na desatiny voltov a časy sú zaokrúhlené na stovky nanosekúnd.}
@@ -146,7 +169,7 @@ Zároveň sme každý tranzistor vyskúšali s rôznymi hodnotami zdvíhacieho, 
     \end{center}
 \end{table}
 
-\section{Testovanie efektov útoku}
+\section{Testovanie efektov útoku} \label{kap3:sek:testovanieEfektov}
 V tejto časti podrobnejšie preskúmame, čo presne sa dá útokom využívajúcim zapojenie analyzované v predošlej časti dosiahnuť. Pokúsime sa experimentálne určiť niektoré z možných efektov útoku na mikrokontroléri ATMega328P na úrovni makroinštrukcií procesora. Pomocou techniky zmeny napätia sa pokúsime ovplyvniť rôzne inštrukcie, prípadne kratšie časti kódu písané v jazyku asembler. Aby sme dosiahli väčšiu presnosť načasovania útoku, rozhodli sme sa pridať synchronizáciu medzi zariadením, ktoré ovláda tranzistor a mikrokontrolérom, na ktorý útočíme. Tranzistor sme ovládali dvomi rôznymi vývojovými doskami s rôznou frekvenciou procesora. Ako prvú sme vyskúšali dosku Arduino Nano, ďalej len Nano, s rovnakým mikrokontrolérom (ATMega328P), na aký útočíme. V druhom riešení sme tranzistor ovládali pomocou dosky STM32 F4 Discovery, ďalej len Discovery, ktorá by mala mať väčšiu presnosť keďže má vyššiu taktovaciu frekvenciu -- 168 MHz oproti 16 MHz, ktorú má Nano. Obidva prístupy sme následne porovnali.
 
 ATMega328P zapojíme tak, ako na obrázku \ref{obr:schemeATMega} na kontaktnom bez-spájkovom poli. Zem (piny GND) zapojíme cez NPN tranzistor (aj so zdvíhacím odporom), ktorého bázu budeme ovládať pomocou výstupného GPIO pinu na zdroji indukovania chýb (Nano, resp. Discovery). Ďalej pin GPIO 8 (Port B0) na ATMega328P nastavíme ako výstupný a priamo ho pripojíme na vstupný GPIO pin zdroja indukovania chýb. Pomocou neho bude ATMega328P posielať signály pre synchronizáciu útoku. Schéma zapojenia je na obrázku \ref{obr:schemeExpTranz}. Doska Discovery neumožňuje sériovú komunikáciu s počítačom priamo cez rozhranie ST-Link, ktorým je pripojená k USB. Rozhodli sme sa preto prepojiť jej pin TX s pinom RX na ďalší samostatný prevodník z USB na UART (rovnaký model ako prevodník pripojený k ATMega328P -- obrázok \ref{obr:schemeATMega}) pre komunikáciu s počítačom na samostatnom porte.
@@ -157,9 +180,9 @@ ATMega328P zapojíme tak, ako na obrázku \ref{obr:schemeATMega} na kontaktnom b
     \label{obr:schemeExpTranz}
 \end{figure}
 
-Experiment bude potom prebiehať nasledovne: ATMega328P pošle signál zdroju indukovania chýb a následné začne vykonávať kód, na ktorý chceme útočiť (séria inštrukcií písaná v jazyku asembler). Zdroj indukovania chýb po prijatí signálu počká krátky čas, ďalej len odstup (offset), následne zatvorí tranzistor a opäť počká krátky čas, potom tranzistor opäť otvorí. Dĺžka medzi zatvorením a otvorením tranzistora, ďalej len výpadok, a odstup sú nezávisle nastaviteľné parametre, ktorými vieme nastavovať presnosť útoku. Naše očakávanie je, že nastavením odstupu vieme zacieliť na konkrétnu časť úseku kódu, na ktorý útočíme a nastavením výpadku môžeme meniť vplyv útoku. Cieľom tejto sady experimentov bude určiť ako vieme pomocou nastavovania týchto parametrov ovplyvniť výsledok útoku. Ďalej sa pokúsime určiť aký druh chyby vieme na ATMega328P takýmto spôsobom indukovať, napríklad vynechanie inštrukcie, ovplyvnenie výsledku inštrukcie, podmieneného skoku a pod.
+Experiment bude potom prebiehať nasledovne: ATMega328P pošle signál zdroju indukovania chýb a následné začne vykonávať kód, na ktorý chceme útočiť (séria inštrukcií písaná v jazyku asembler). Zdroj indukovania chýb po prijatí signálu počká krátky čas, ďalej len posun (offset), následne zatvorí tranzistor a opäť počká krátky čas, potom tranzistor opäť otvorí. Dĺžka medzi zatvorením a otvorením tranzistora, ďalej len výpadok, a posun sú nezávisle nastaviteľné parametre, ktorými vieme nastavovať presnosť útoku. Naše očakávanie je, že nastavením posunu vieme zacieliť na konkrétnu časť úseku kódu, na ktorý útočíme a nastavením výpadku môžeme meniť vplyv útoku. Cieľom tejto sady experimentov bude určiť ako vieme pomocou nastavovania týchto parametrov ovplyvniť výsledok útoku. Ďalej sa pokúsime určiť aký druh chyby vieme na ATMega328P takýmto spôsobom indukovať, napríklad vynechanie inštrukcie, ovplyvnenie výsledku inštrukcie, podmieneného skoku a pod.
 
-Pre nastavenie parametrov odstup a výpadok sme použili podobný prístup ako v algoritme \ref{alg:asmDelay}. Výhodou je možnosť nastavovania týchto parametrov aj za behu programu. Pre dosku Nano sme použili presne tú istú procedúru, zatiaľ, čo pre dosku Discovery sme navrhli analogickú, keďže architektúra jej mikrokontroléra je odlišná (podrobnosti v kapitole \ref{kap:hardver}), napríklad nepodporuje inštrukciu DEC (priamy dekrement registra). Túto inštrukciu sme nahradili pomocou inštrukcie SUBS, ktorá odčíta konštantu od registra a nastaví podmienkové bity, pre následné vykonanie podmieneného skoku. Keďže STM32F4 na doske Discovery má vyššiu taktovaciu frekvenciu, procedúra oneskorenia poskytuje väčšiu presnosť pri nastavení počtu iterácií. Porovnanie teoretickej presnosti procedúr oneskorenia sa nachádza v tabuľke \ref{tab:asmDelayT}. Z hľadiska presnosti je relevantný aj minimálny čas potrebný pre nastavenie výstupnej hodnoty na 0 a následne na 1 (napríklad na zatvorenie a okamžité otvorenie tranzistora). Túto hodnotu sme sa priamo pokúsili odmerať pomocou osciloskopu, pričom s doskou Nano sme namerali čas približne 200 ns, zatiaľ, čo pri doske Discovery len 100 ns. Tieto časy teda predstavujú dolný odhad pre časové oneskorenie riadenia akéhokoľvek obvodu. Zároveň sme sa pokúsili určiť presnosť procedúry oneskorenia. Odmerali sme dĺžku výpadku pri rôznom počte iterácií a následne sme vypočítali priemer rozdielu pri posune o 1 iteráciu. Zaokrúhlené hodnoty sú v tabuľke \ref{tab:asmDelayT}. Hodnotu parametrov odstupu a výpadku budeme ďalej v tejto časti uvádzať v počte iterácií procedúry oneskorenia pre dosku Nano resp. Discovery (napr. výpadok 5 znamená 5 iterácií procedúry oneskorenia medzi vypnutím a zapnutím tranzistora).
+Pre nastavenie parametrov posun a výpadok sme použili podobný prístup ako v algoritme \ref{alg:asmDelay}. Výhodou je možnosť nastavovania týchto parametrov aj za behu programu. Pre dosku Nano sme použili presne tú istú procedúru, zatiaľ, čo pre dosku Discovery sme navrhli analogickú, keďže architektúra jej mikrokontroléra je odlišná (podrobnosti v kapitole \ref{kap:hardver}, sekcii \ref{kap2:sek:STM32}), napríklad nepodporuje inštrukciu DEC (priamy dekrement registra). Túto inštrukciu sme nahradili pomocou inštrukcie SUBS, ktorá odčíta konštantu od registra a nastaví podmienkové bity, pre následné vykonanie podmieneného skoku. Keďže STM32F4 na doske Discovery má vyššiu taktovaciu frekvenciu, procedúra oneskorenia poskytuje väčšiu presnosť pri nastavení počtu iterácií. Porovnanie teoretickej presnosti procedúr oneskorenia sa nachádza v tabuľke \ref{tab:asmDelayT}. Z hľadiska presnosti je relevantný aj minimálny čas potrebný pre nastavenie výstupnej hodnoty na 0 a následne na 1 (napríklad na zatvorenie a okamžité otvorenie tranzistora). Túto hodnotu sme sa priamo pokúsili odmerať pomocou osciloskopu, pričom s doskou Nano sme namerali čas približne 200 ns, zatiaľ, čo pri doske Discovery len 100 ns. Tieto časy teda predstavujú dolný odhad pre časové oneskorenie riadenia akéhokoľvek obvodu. Zároveň sme sa pokúsili určiť presnosť procedúry oneskorenia. Odmerali sme dĺžku výpadku pri rôznom počte iterácií a následne sme vypočítali priemer rozdielu pri posune o 1 iteráciu. Zaokrúhlené hodnoty sú v tabuľke \ref{tab:asmDelayT}. Hodnotu parametrov posun a výpadok budeme ďalej v tejto časti uvádzať v počte iterácií procedúry oneskorenia pre dosku Nano resp. Discovery (napr. výpadok 5 znamená 5 iterácií procedúry oneskorenia medzi vypnutím a zapnutím tranzistora).
 
 \begin{table}
     \caption[Porovnanie teoretickej presnosti STM32F4 a ATMega328P]{Porovnanie teoretickej presnosti procedúry oneskorenia na STM32F4 a ATMega328P. Hodnoty v tabuľke sú vypočítané na základe parametrov, ktoré uvádza príslušný výrobca \cite{atmegaData, avrInstruction, stmReference, stmInstruction}.}
@@ -204,19 +227,19 @@ Na otestovanie efektu útoku sme napísali jednoduché úseky kódu v jazyku ase
     \item Priamy skok na adresu (inštrukcia RJMP)\\
     Inicializujeme hodnotu registra R na 0x00 a následne vykonáme skok na adresu A, ktorá sa nachádza o 1 inštrukciu ďalej. Medzi inštrukciou skoku a adresou A preskočíme inštrukciu LDI, ktorá uloží do R konštantu 0xFF). Cieľom útoku je vynechať inštrukciu skoku, čo by malo mať za výsledok, že do registra R sa uloží hodnota 0xFF (inštrukcia LDI sa nepreskočí). Za normálnych okolností by v R mala ostať hodnota 0x00.
     \item Séria inkrementov (inštrukcia INC)\\
-    Opäť inicializujeme hodnotu registra R na 0x00 a následne vykonáme sériu 32 inkrementov pomocou inštrukcie INC, ktorá zakaždým zväčší hodnotu v registri o jeden. Pri korektnom behu by v registri R po vykonaní experimentu mala byť teda hodnota 32 (0x20). Cieľom bude pozorovať ako bude útok (s rôznymi hodnotami odstupu a výpadku) vplývať na výsledok v registri R.
+    Opäť inicializujeme hodnotu registra R na 0x00 a následne vykonáme sériu 32 inkrementov pomocou inštrukcie INC, ktorá zakaždým zväčší hodnotu v registri o jeden. Pri korektnom behu by v registri R po vykonaní experimentu mala byť teda hodnota 32 (0x20). Cieľom bude pozorovať ako bude útok (s rôznymi hodnotami posunu a výpadku) vplývať na výsledok v registri R.
 \end{itemize}
 
-Výsledkom bolo, že v prvých dvoch experimentoch bol útok neúspešný (Nano aj Discovery) -- príliš krátky výpadok nespôsobil žiadnu pozorovateľnú chybu, dlhý mal za následok úplné zlyhanie (mikrokontrolér sa síce nereštartoval, ale posielal na výstup nezmyselné správy a prestal reagovať na vstupy). Nepodarilo sa nastaviť dĺžku výpadku (binárnym vyhľadávaním) tak, aby bol výsledok útoku niekde medzi vyššie spomenutými. Zmena dĺžky odstupu výsledok neovplyvnila. Pri útoku na sériu inkrementov sa podarilo dosiahnuť, že výsledná hodnota v registri R bola 31 miesto očakávanej 32, s rovnakým výsledkom pri Nano aj Discovery.
+Výsledkom bolo, že v prvých dvoch experimentoch bol útok neúspešný (Nano aj Discovery) -- príliš krátky výpadok nespôsobil žiadnu pozorovateľnú chybu, dlhý mal za následok úplné zlyhanie (mikrokontrolér sa síce nereštartoval, ale posielal na výstup nezmyselné správy a prestal reagovať na vstupy). Nepodarilo sa nastaviť dĺžku výpadku (binárnym vyhľadávaním) tak, aby bol výsledok útoku niekde medzi vyššie spomenutými. Zmena dĺžky posunu výsledok neovplyvnila. Pri útoku na sériu inkrementov sa podarilo dosiahnuť, že výsledná hodnota v registri R bola 31 miesto očakávanej 32, s rovnakým výsledkom pri Nano aj Discovery.
 
-Spomenuté pozorovanie pri útoku na sériu inkrementov naznačujú, že podpätie na mikrokontroléri počas výpadku pravdepodobne spôsobilo vynechanie jednej inštrukcie INC. Problém pri útoku v druhých dvoch experimentov mohol spočívať v tom, že kód, na ktorý cielime bol príliš krátky. Oneskorenie dané reakčným časom útočiaceho mikrokontroléra a tranzistora spôsobilo, že inštrukcia, ktorú útok ovplyvnil už nebola súčasťou cieleného kódu, ale súčasťou obsluhy rozhrania UART, ktorým ATMega328P posielalo výsledok experimentu. To mohlo mať za následok, že mikrokontrolér posielal nezmyselné správy. V horšom prípade stav pamäte nebol konzistentný z pohľadu funkcií, ktoré obsluhujú toto rozhranie, čo mohlo spôsobiť ďalšie fatálne poruchy. Pri nastavení odstupu nad hraničnú hodnotu (2 v prípade dosky Nano, 47 v prípade dosky Discovery) už nebol úspešný ani útok na sériu inštrukcií INC. Našou hypotézou teda je, že týmto útokom vieme docieliť vynechanie 1 inštrukcie, pričom musíme počítať s istým oneskorením od prijatia signálu na zaútočenie. Toto oneskorenie vieme s obmedzenou presnosťou regulovať nastavením parametra odstupu, minimálna dĺžka oneskorenia je však relatívne veľká.
+Spomenuté pozorovanie pri útoku na sériu inkrementov naznačujú, že podpätie na mikrokontroléri počas výpadku pravdepodobne spôsobilo vynechanie jednej inštrukcie INC. Problém pri útoku v druhých dvoch experimentov mohol spočívať v tom, že kód, na ktorý cielime bol príliš krátky. Oneskorenie dané reakčným časom útočiaceho mikrokontroléra a tranzistora spôsobilo, že inštrukcia, ktorú útok ovplyvnil už nebola súčasťou cieleného kódu, ale súčasťou obsluhy rozhrania UART, ktorým ATMega328P posielalo výsledok experimentu. To mohlo mať za následok, že mikrokontrolér posielal nezmyselné správy. V horšom prípade stav pamäte nebol konzistentný z pohľadu funkcií, ktoré obsluhujú toto rozhranie, čo mohlo spôsobiť ďalšie fatálne poruchy. Pri nastavení posunu nad hraničnú hodnotu (2 v prípade dosky Nano, 47 v prípade dosky Discovery) už nebol úspešný ani útok na sériu inštrukcií INC. Našou hypotézou teda je, že týmto útokom vieme docieliť vynechanie jednej inštrukcie (vyvolaním jedného podpätia), pričom musíme počítať s istým oneskorením od prijatia signálu na zaútočenie. Toto oneskorenie vieme s obmedzenou presnosťou regulovať nastavením parametra posun, minimálna dĺžka oneskorenia je však relatívne veľká.
 
 Rozhodli sme sa preto modifikovať kód v ostatných dvoch experimentoch, ktoré boli predtým neúspešné. Pred inštrukciu LDI, resp. RJMP sme pridalo niekoľko inštrukcií NOP. Pridaním inštrukcií NOP by sme mali vykompenzovať oneskorenie útočiaceho mikrokontroléra, ktorý by už mal stihnúť zaútočiť na cielenú inštrukciu. Našim novým cieľom je teraz potvrdiť predošlú hypotézu a zistiť počet inštrukcií NOP, ktoré treba pridať, aby bol útok aj v prípade druhých dvoch experimentov úspešný.
 
-Rovnaký útok sme teraz vykonali na takto modifikovaný kód (pomocou Nano aj Discovery), pričom útok sme spustili s nulovým odstupom (Hneď po prijatí signálu). Úspešne sa podarilo dosiahnuť vynechanie cielenej inštrukcie, po pridaní vhodného počtu inštrukcií NOP pred ňu. Počet bol pritom rôzny pri útočení pomocou dosky Nano a Discovery, podrobnosti sú v tabuľke \ref{tab:experiments}. V prípade inštrukcie LDI zostala v registri pôvodná hodnota 0x00 a v prípade RJMP bol register prepísaný na hodnotu 0xFF inštrukciou, ktorú mal skok preskočiť. Ďalej sme skúsili útok zopakovať aj s inými hodnotami pri inicializácií a prepísaní registra. Výsledok bol analogický, čím sme  sme potvrdili, že skutočne dochádza k vynechaniu inštrukcie a nie k inému ovplyvneniu programu.
+Rovnaký útok sme teraz vykonali na takto modifikovaný kód (pomocou Nano aj Discovery), pričom útok sme spustili s nulovým posunom (Hneď po prijatí signálu). Úspešne sa podarilo dosiahnuť vynechanie cielenej inštrukcie, po pridaní vhodného počtu inštrukcií NOP pred ňu. Počet bol pritom rôzny pri útočení pomocou dosky Nano a Discovery, podrobnosti sú v tabuľke \ref{tab:experiments}. V prípade inštrukcie LDI zostala v registri pôvodná hodnota 0x00 a v prípade RJMP bol register prepísaný na hodnotu 0xFF inštrukciou, ktorú mal skok preskočiť. Ďalej sme skúsili útok zopakovať aj s inými hodnotami pri inicializácií a prepísaní registra. Výsledok bol analogický, čím sme  sme potvrdili, že skutočne dochádza k vynechaniu inštrukcie a nie k inému ovplyvneniu programu.
 
 \begin{table}
-    \caption[Porovnanie Výsledkov experimentov]{Porovnanie Výsledkov experimentov s doskami Nano a Discovery. Veľkosť parametra výpadok je uvedený počtom iterácií príslušnej procedúry oneskorenia. Parameter odstup bol pri týchto útokoch vždy nulový.}
+    \caption[Porovnanie Výsledkov experimentov]{Porovnanie Výsledkov experimentov s doskami Nano a Discovery. Veľkosť parametra výpadok je uvedený počtom iterácií príslušnej procedúry oneskorenia. Parameter posun bol pri týchto útokoch vždy nulový.}
     \label{tab:experiments}
     \begin{center}
     \begin{tabular}{|c|c|c|}
@@ -239,50 +262,52 @@ Rovnaký útok sme teraz vykonali na takto modifikovaný kód (pomocou Nano aj D
     \end{center}
 \end{table}
 
-Ďalej sme sa pokúsili overiť, či zmena parametra odstupu vplýva na oneskorenie útoku. Útok sme zopakovali viackrát, pričom sme postupne zväčšovali odstup. So zväčšujúcim sa odstupom sa zväčšoval aj počet potrebných inštrukcií NOP, ktoré bolo treba pridať pred cielenú inštrukciu, pričom nárast bol približne lineárny. Malé odchýlky od presnej lineárnej závislosti mohli byť spôsobené tým, že zväčšenie odstupu o 1 iteráciu procedúry oneskorenia časovo nezodpovedá presne celočíselnému násobku počtu inštrukcií NOP na cieľovom ATMega328P. Zistený vzťah medzi veľkosťou odstupu a počtom NOP inštrukcií pred cielenou inštrukciou je znázornený v grafe na obrázku \ref{obr:offsetNOP} pre hodnoty odstupu 0 -- 10. Pre presnejšie určenie tejto závislosti by bolo potrebné vykonať rádovo viacej testov. Našim cieľom však bolo len overiť, či zmena parametra odstupu ovplyvňuje útok. Pri skutočnom útoku je program, na ktorý sa útočí zvyčajne statický z hľadiska počtu inštrukcií v kóde a cieľom útočníka by skôr bolo správne nastaviť parametre odstup a výpadok, čo naše riešenie automatizovane umožňuje aj dynamicky za behu.
+Ďalej sme sa pokúsili overiť, či zmena parametra posun vplýva na oneskorenie útoku. Útok sme zopakovali viackrát, pričom sme postupne zväčšovali posun. So zväčšujúcim sa posunom sa zväčšoval aj počet potrebných inštrukcií NOP, ktoré bolo treba pridať pred cielenú inštrukciu, pričom nárast bol približne lineárny. Malé odchýlky od presnej lineárnej závislosti mohli byť spôsobené tým, že zväčšenie posunu o 1 iteráciu procedúry oneskorenia časovo nezodpovedá presne celočíselnému násobku počtu inštrukcií NOP na cieľovom ATMega328P. Zistený vzťah medzi veľkosťou posunu a počtom NOP inštrukcií pred cielenou inštrukciou je znázornený v grafe na obrázku \ref{obr:offsetNOP} pre hodnoty posunu 0 -- 10. Pre presnejšie určenie tejto závislosti by bolo potrebné vykonať rádovo viacej testov. Našim cieľom však bolo len overiť, či zmena parametra posun ovplyvňuje útok. Pri skutočnom útoku je program, na ktorý sa útočí zvyčajne statický z hľadiska počtu inštrukcií v kóde a cieľom útočníka by skôr bolo správne nastaviť parametre posun a výpadok, čo naše riešenie automatizovane umožňuje aj dynamicky za behu.
 
 \begin{figure}
     \centerline{
-        \begin{tikzpicture}
+    \begin{tikzpicture}
         \begin{axis}[
-        xlabel={Odstup},
-        ylabel={Počet inštrukcií NOP},
-        xmin=0, xmax=10,
-        ymin=15, ymax=60,
-        xtick={0,1,2,3,4,5,6,7,8,9,10},
-        ytick={15,20,25,30,35,40,45,50,55,60},
-        legend pos=north west,
-        ymajorgrids=true,
-        grid style=dashed,
+            xlabel={Posun},
+            ylabel={Počet inštrukcií NOP},
+            xmin=0, xmax=10,
+            ymin=15, ymax=60,
+            xtick={0,1,2,3,4,5,6,7,8,9,10},
+            ytick={15,20,25,30,35,40,45,50,55,60},
+            legend pos=north west,
+            ymajorgrids=true,
+            grid style=dashed,
         ]
-        \addplot[
-            color=blue,
-            mark=*,
-            ]
+        \addplot[color=blue, mark=*]
             coordinates {
             (0,27)(1,29)(2,33)(3,35)(4,39)(5,42)(6,45)(7,48)(8,51)(9,54)(10,56)
             };
-            \addlegendentry{Nano}
-        \addplot[
-            color=green,
-            mark=*,
-            ]
+        \addplot[color=blue, domain=0:10, dotted]
+            {3.01*x + 26.68};
+        \addplot[color=red, mark=*]
             coordinates {
             (0,19)(1,19)(2,19)(3,20)(4,20)(5,20)(6,21)(7,21)(8,21)(9,21)(10,22)
             };
-            \addlegendentry{Discovery}
+        \addplot[color=red, domain=0:10, dotted]
+            {0.29*x + 18.82};
+        \legend {
+            Nano,
+            $3.01x + 26.68$,
+            Discovery,
+            $0.29x + 18.82$
+        };
         \end{axis}
-        \end{tikzpicture}
+    \end{tikzpicture}
     }
-    \caption[Závislosť oneskorenia útoku od parametra odstup]{Závislosť oneskorenia útoku od parametra odstup. Na zvislej osi je počet NOP inštrukcií (určený na základe úspešnosti útoku) pred cielenou inštrukciou. Na vodorovnej osi je veľkosť parametra odstup (počet iterácií príslušnej procedúry oneskorenia). Priemerný počet NOP inštrukcií na zmenu odstupu o 1 je približne 3 pre dosku Nano, resp. 1/3 pre dosku Discovery.}
+    \caption[Závislosť oneskorenia útoku od parametra posun]{Závislosť oneskorenia útoku od parametra posun. Na zvislej osi je počet NOP inštrukcií (určený na základe úspešnosti útoku) pred cielenou inštrukciou. Na vodorovnej osi je veľkosť parametra posun (počet iterácií príslušnej procedúry oneskorenia). Bodkovanou čiarou je znázornená lineárna aproximácia príslušnej závislosti (zaokrúhlená na dve desatinné miesta).}
     \label{obr:offsetNOP}
 \end{figure}
 
 \subsection{Ďalšie pozorovania}
-Podarilo sa nám zistiť, že zapojenie s tranzistorom umožňuje cielene vynechať inštrukciu s vysokou spoľahlivou úspešnosťou. Po vhodnom nastavení parametrov odstupu a výpadku (v závislosti od cieleného kódu) bolo možné útok opakovať niekoľko krát za sebou (bez potreby reštartu cieľa) s úspešnosťou nad 90\%. V niektorých prípadoch sa pri útoku na inštrukciu LDI dokonca podarilo dosiahnuť, že hodnota v registri nebola zhodná ani s pôvodnou, ani s hodnotou, ktorú mala cielená inštrukcia do registra prepísať. Pravdepodobne sa podarilo útok načasovať tak, že inštrukcia sa síce vykonala, ale s chybným výsledkom. Takýto výsledok sa však nepodarilo spoľahlivo a stabilne reprodukovať, tak aby bolo možné cielene ovplyvniť výsledok inštrukcie. Môžeme teda konštatovať, že útok vyžadujúci takéto chybné správanie by pri použitom zapojení vyžadoval použitie hardvéru s vyššou presnosťou časovania. Rovnako sa nepreukázalo, že by sa podarilo cielene ovplyvniť inštrukciu skoku tak, aby program skočil na útočníkom zvolenú adresu. Nesprávne vyhodnotenie podmienky skoku, však možno simulovať vynechaním tejto inštrukcie v prípade, že potrebujeme, aby sa skok nevykonal.
+Podarilo sa nám zistiť, že zapojenie s tranzistorom umožňuje cielene vynechať inštrukciu s vysokou spoľahlivou úspešnosťou. Po vhodnom nastavení parametrov posun a výpadok (v závislosti od cieleného kódu) bolo možné útok opakovať niekoľko krát za sebou (bez potreby reštartu cieľa) s úspešnosťou nad 90\%. V niektorých prípadoch sa pri útoku na inštrukciu LDI dokonca podarilo dosiahnuť, že hodnota v registri nebola zhodná ani s pôvodnou, ani s hodnotou, ktorú mala cielená inštrukcia do registra prepísať. Pravdepodobne sa podarilo útok načasovať tak, že inštrukcia sa síce vykonala, ale s chybným výsledkom. Výsledná konštanta nebola zhodná ani s konštantou očakávanou pri korektnom behu programu (0x55), ani s konštantou, ktorá by mohla vzniknúť vynechaním ľubovolnej inštrukcie (alebo viacero) z cielenej časti kódu (0x00). Takýto výsledok sa však nepodarilo spoľahlivo a stabilne reprodukovať, tak aby bolo možné cielene ovplyvniť výsledok inštrukcie. Môžeme teda konštatovať, že útok vyžadujúci takéto chybné správanie by pri našom zapojení vyžadoval použitie rýchlejšieho hardvéru. Rovnako sa nepreukázalo, že by sa podarilo cielene ovplyvniť inštrukciu skoku tak, aby program skočil na útočníkom zvolenú adresu. Nesprávne vyhodnotenie podmienky skoku, však možno simulovať vynechaním tejto inštrukcie v prípade, že potrebujeme, aby sa skok nevykonal.
 
-\section{Útok s využitím hradlového ovládača}
-Ďalej sa pokúsime o útok pomocou hradlového ovládača, integrovaného obvodu TC4420, ktorý se stručne opísali v kapitole \ref{kap:hardver}. Pri útoku pomocou zapojenia s tranzistorom sme pozorovali pomalý pokles napätia, ktorý sme museli vykompenzovať pridaním zdvíhacieho odporu. Výrobca hradlového ovládača TC4420 uvádza, že časy stúpajúcich a klesajúcich hrán sú 25 ns \cite{gateDriver}, čo je dokonca rýchlejšie ako zapojenie s tranzistorom spolu so zdvíhacím odporom analyzované v predošlej časti.
+\section{Útok s využitím hradlového ovládača} \label{kap3:sek:hradlovyOvladac}
+Ďalej sa pokúsime o útok pomocou hradlového ovládača, integrovaného obvodu TC4420, ktorý se stručne opísali v sekcii \ref{kap2:sek:hradlovyOvladac}. Pri útoku pomocou zapojenia s tranzistorom sme pozorovali pomalý pokles napätia, ktorý sme museli vykompenzovať pridaním zdvíhacieho odporu (zdvíhame zem). Výrobca hradlového ovládača TC4420 uvádza, že časy stúpajúcich a klesajúcich hrán sú 25 ns \cite{gateDriver}, čo je dokonca rýchlejšie ako zapojenie s tranzistorom spolu so zdvíhacím odporom analyzované v predošlej časti.
 
 Keďže integrovaný obvod TC4420 už obsahuje všetky potrebné súčiastky, k jeho pripojeniu k cieľovému ATMega328P nám stačia len prepojovacie kábliky a kontaktné bez-spájkové pole. Schéma zapojenia mikrokontroléra s hradlovým ovládačom je znázornená na obrázku \ref{obr:schemeGateDriver}. Pripomíname, že k mikrokontroléru ATMega328P sme pripojili aj súčiastky potrebné pre jeho fungovanie podľa schémy na obrázku \ref{obr:schemeATMega}. Zároveň sme ponechali prepojenie pinov z predošlého útoku, ktoré umožnilo synchronizáciu zdroja indukovania chýb s cieľom.
 
@@ -302,4 +327,4 @@ Rozhodli sme sa preto opäť analyzovať priebeh napätia na cieľovom mikrokont
     \label{obr:gateDriverAnalysis}
 \end{figure}
 
-Na základe analýzy môžeme konštatovať, že dôvodom neúspešnosti útokov pri zapojení s hradlovým ovládačom je pravdepodobne prudký pokles napätia až na 0 V a pomalá reakcia nami zvoleného hardvéru pre riadenie útoku. Interval, počas ktorého vzniklo podpätie bol príliš dlhý a preto väčšia kvalita zapojenia s hradlovým ovládačom v porovnaní s tranzistorom sa ukázala ako nežiadúca. Pri zapojení s tranzistorom fakt, že napätie klesalo počas vypnutia pomalšie, kompenzoval nízku presnosť použitého lacného hardvéru, čo v konečnom dôsledku prispelo k úspešnosti útokov. Pri použití dosky Arduino Nano sa pomocou hradlového ovládača nepodarilo realizovať ani jeden úspešný útok. Pomocou dosky STM32 F4 Discovery sa útok síce podaril, ale, ako sme spomenuli, s rádovo nižšou presnosťou ako pri zapojení s tranzistorom. Preto sme sa rozhodli týmto útok pomocou hradlového ovládača uzavrieť s tým, že k jeho úspešnému použitiu na útok pomocou techniky zmeny napätia by bol potrebný lepší hardvér s vyššou presnosťou, napr. FPGA alebo laboratórny zdroj. Napriek tomu sme analýzou potvrdili, že z hľadiska presnosti a reakčného času mal hradlový ovládač lepšie vlastnosti ako tranzistor.
+Na základe analýzy môžeme konštatovať, že dôvodom neúspešnosti útokov pri zapojení s hradlovým ovládačom je pravdepodobne prudký pokles napätia až na 0 V a pomalá reakcia nami zvoleného hardvéru pre riadenie útoku. Interval, počas ktorého vzniklo podpätie bol príliš dlhý a preto väčšia kvalita zapojenia s hradlovým ovládačom v porovnaní s tranzistorom sa ukázala ako nežiadúca. Pri zapojení s tranzistorom fakt, že napätie klesalo počas vypnutia pomalšie, kompenzoval pomalosť použitého lacného hardvéru, čo v konečnom dôsledku prispelo k úspešnosti útokov. Pri použití dosky Arduino Nano sa pomocou hradlového ovládača nepodarilo realizovať ani jeden úspešný útok. Pomocou dosky STM32 F4 Discovery sa útok síce podaril, ale, ako sme spomenuli, s rádovo nižšou presnosťou ako pri zapojení s tranzistorom. Preto sme sa rozhodli týmto útok pomocou hradlového ovládača uzavrieť s tým, že k jeho úspešnému použitiu na útok pomocou techniky zmeny napätia by bol potrebný lepší hardvér s vyššou rýchlosťou, napr. FPGA alebo laboratórny zdroj. Napriek tomu sme analýzou potvrdili, že z hľadiska presnosti a reakčného času mal hradlový ovládač lepšie vlastnosti ako tranzistor.
