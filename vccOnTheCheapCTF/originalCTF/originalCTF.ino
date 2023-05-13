@@ -1,4 +1,8 @@
-/* Code cpied from: https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/ */
+/**
+* Originalny kod utoku na firmver zo sutaze CTF
+* prevzaty 2023-03-18 z:
+* https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/
+*/
 
 int incomingByte = 0;
 char b[5];
