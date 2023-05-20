@@ -34,7 +34,7 @@ void setup() {
 // funkcia, ktora ovlada tranzistor
 void glitch() {
     // ulozime globalnu premennu do registra pre pouzitie v asembleri
-    register uint8_t localDelay = globalDelay;
+    register uint8_t localDelay = glitchDelay;
 
     // vypneme tranzistor
     // _SFR_IO_ADDR staticky vypocita adresu I/O registra pre ovladanie pinu

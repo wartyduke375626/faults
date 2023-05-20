@@ -30,7 +30,7 @@
     {Ý}{{\'Y}}1 {Ž}{{\v{Z}}}1
 }
 \lstdefinelanguage{AVR}{
-    keywords={clr, eor, cpi, breq, inc, tst, brne, ldi, nop, add, sub, mov, or, dec, ldr, str},
+    keywords={clr, eor, cpi, breq, inc, tst, brne, ldi, sbi, cbi, nop, add, sub, mov, or, dec, ldr, str},
     sensitive=false,
     comment=[l]{;},
 }
@@ -61,27 +61,19 @@
 \def\mfautor{Dennis Vita}
 \def\mfskolitel{RNDr. Richard Ostertág, PhD. }
 
-%ak mate konzultanta, odkomentujte aj jeho meno na titulnom liste
-\def\mfkonzultant{tit. Meno Priezvisko, tit. }  
-
 \def\mfmiesto{Bratislava, \mfrok}
 
 \def\mfodbor{ Informatika}
 \def\program{ Informatika }
-
-
-% Ak je školiteľ z FMFI, uvádzate katedru školiteľa, zrejme by mala byť aj na zadaní z AIS2
-% Ak máte externého školiteľa, uvádzajte Katedru informatiky 
 \def\mfpracovisko{ FMFI.KI - Katedra informatiky }
 
-\begin{document}     
+\begin{document}
 \frontmatter
 \pagestyle{empty}
 
 % -------------------
 % --- Obalka ------
 % -------------------
-
 \begin{center}
 \sc\large
 Univerzita Komenského v Bratislave\\
@@ -103,11 +95,10 @@ Fakulta matematiky, fyziky a informatiky
 \cleardoublepage
 % --- koniec obalky ----
 
+
 % -------------------
 % --- Titulný list
 % -------------------
-
-
 \noindent
 
 \begin{center}
@@ -130,7 +121,6 @@ Fakulta matematiky, fyziky a informatiky
 Študijný odbor: & \mfodbor \\
 Školiace pracovisko: & \mfpracovisko \\
 Školiteľ: & \mfskolitel \\
-% Konzultant: & \mfkonzultant \\
 \end{tabular}
 
 \vfill
@@ -146,14 +136,9 @@ Fakulta matematiky, fyziky a informatiky
 % -------------------
 % --- Zadanie z AIS
 % -------------------
-% v tlačenej verzii s podpismi zainteresovaných osôb.
-% v elektronickej verzii sa zverejňuje zadanie bez podpisov
-% v pracach v angličtine anglické aj slovenské zadanie
-
 \newpage 
 \setcounter{page}{2}
 \includepdf{images/zadanie.pdf}
-
 % --- Koniec zadania
 
 
@@ -165,9 +150,11 @@ Fakulta matematiky, fyziky a informatiky
 ~
 
 \vfill
-{\bf Poďakovanie:} Ďakujem vedúcemu bakalárskej práce RNDr. Richardovi Ostertágovi, PhD. za odborné pripomienky a rady k ...[Dokončiť]
+{\bf Poďakovanie:} Ďakujem vedúcemu bakalárskej práce RNDr. Richardovi Ostertágovi, PhD. za odborné vedenie, metodickú pomoc, podnetné nápady, pripomienky a~konzultácie pri písaní práce. Ďakujem aj Tomášovi Stykovi za poskytnutie dodatočnej pomoci pri návrhu implementácie niektorých častí práce.\\
 
+Táto práca vznikla aj vďaka podpore v rámci Operačného programu Integrovaná infraštruktúra pre projekt: Advancing University Capacity and Competence in Research, Development and Innovation (ACCORD), spolufinancovaný zo zdrojov Európskeho fondu regionálneho rozvoja.
 % --- Koniec poďakovania
+
 
 % -------------------
 %   Abstrakt - Slovensky
@@ -175,7 +162,7 @@ Fakulta matematiky, fyziky a informatiky
 \newpage 
 \section*{Abstrakt}
 
-Vplyvom externých fyzikálnych faktorov (zmena napájania, elektromagnetické rušenie a pod.) je možné ovplyvniť činnosť hardvéru až do takej miery, že nekorektne vykoná niektorú operáciu. Indukovanie chýb je technika útoku, ktorá zneužíva toto správanie a možno pomocou nej cielene zaútočiť na konkrétny hardvér. Pri správnom načasovaní na konkrétnu časť programu je možné cielene ovplyvniť daný hardvér, napríklad s účelom obísť bezpečnostný mechanizmus alebo narušiť implementáciu kryptografického algoritmu. Cieľom práce je overiť, či aj lacným hardvérom možno realizovať úspešný útok. Zároveň sa v práci zaoberáme podrobnou analýzou vybraných útokov a ich možným dopadom na konkrétny hardvér (mikrokontrolér ATMega328P). Cieľom je aj zistiť aké možnosti pre útočníka lacný hardvér poskytuje. Výsledky analýzy na záver demonštrujeme úspešnými útokmi na jednoduché príklady programov.
+Vplyvom externých fyzikálnych faktorov (zmena napájania, elektromagnetické rušenie a pod.) je možné ovplyvniť činnosť hardvéru až do takej miery, že nekorektne vykoná niektorú operáciu. Indukovanie chýb je technika útoku, ktorá zneužíva toto správanie a~možno pomocou nej špecifickým spôsobom zaútočiť na konkrétny hardvér. Pri správnom načasovaní na kritickú časť programu je možné cielene ovplyvniť daný hardvér, napríklad s účelom obísť bezpečnostný mechanizmus alebo narušiť implementáciu kryptografického algoritmu. Jedným cieľom práce je overiť, či aj lacným hardvérom možno realizovať úspešný útok. Zároveň sa v práci zaoberáme podrobnou analýzou vybraných útokov a ich možným dopadom na vybraný hardvér (mikrokontrolér ATMega328P). Cieľom je aj zistiť, aké možnosti indukovania chýb pre útočníka lacný hardvér poskytuje, napríklad vynechanie inštrukcie, ovplyvnenie výsledku operácie a~pod. Výsledky analýzy na záver demonštrujeme úspešnými útokmi na vytvorené cvičné príklady programov.
 
 \paragraph*{Kľúčové slová:} indukovanie chýb, mikrokontrolér, zmena napájania
 % --- Koniec Abstrakt - Slovensky
@@ -187,12 +174,12 @@ Vplyvom externých fyzikálnych faktorov (zmena napájania, elektromagnetické r
 \newpage 
 \section*{Abstract}
 
-The influence of external physical factors (power supply changes, electromagnetic interference, etc.) can affect the operation of hardware to such an extent that it may incorrectly execute an operation. Fault injection is an attack technique that exploits this behavior and can be used to attack specific hardware. By proper timing and targeting a specific part of a program, it is possible to deliberately influence the targeted hardware, for example, to bypass a security mechanism or cause faults in an implementation of a cryptographic algorithm. The goal of this thesis is to verify whether successful attacks can also be performed using inexpensive hardware. Additionally, the thesis focuses on a detailed analysis of selected attacks and their potential impact on specific hardware (the ATMega328P microcontroller). The aim is also to explore what capabilities inexpensive hardware to an attacker provides. The analysis results are demonstrated by successful attacks on simple program examples.
+The influence of external physical factors (power supply voltage changes, electromagnetic interference, etc.) can affect the operation of hardware to such an extent that it may incorrectly execute an operation. Fault injection is an attack technique that exploits this behavior and can be used to attack specific hardware. By proper timing and targeting a well-chosen part of a program, it is possible to deliberately influence the targeted hardware, for example, to bypass a security mechanism or cause faults in an implementation of a cryptographic algorithm. One goal of this thesis is to verify whether successful attacks can also be performed using inexpensive hardware. Additionally, the thesis focuses on a detailed analysis of selected attacks and their potential impact on specific hardware (the ATMega328P microcontroller). The aim is also to explore what fault injection capabilities inexpensive hardware to an attacker provides, such as skipping an instruction or influencing the result of an operation.. The analysis results are demonstrated by successful attacks on simple program examples.
 
 
 \paragraph*{Keywords:} fault injection, microcontroller, power glitch
-
 % --- Koniec Abstrakt - Anglicky
+
 
 % -------------------
 % --- Predhovor - v informatike sa zvacsa nepouziva
@@ -213,23 +200,21 @@ The influence of external physical factors (power supply changes, electromagneti
 % -------------------
 % --- Obsah
 % -------------------
-
 \newpage 
 
 \tableofcontents
-
 % ---  Koniec Obsahu
+
 
 % -------------------
 % --- Zoznamy tabuliek, obrázkov - nepovinne
 % -------------------
-
 \newpage 
 
 \listoffigures
 \listoftables
-
 % ---  Koniec Zoznamov
+
 
 \mainmatter
 \pagestyle{headings}
@@ -247,11 +232,10 @@ The influence of external physical factors (power supply changes, electromagneti
 
 \input 05-zaver.tex
 
+
 % -------------------
 % --- Bibliografia
 % -------------------
-
-
 \newpage	
 
 \backmatter
@@ -261,31 +245,14 @@ The influence of external physical factors (power supply changes, electromagneti
 
 \bibliographystyle{plain}
 \bibliography{literatura} 
-
-%Prípadne môžete napísať literatúru priamo tu
-%\begin{thebibliography}{5}
- 
-%\bibitem{br1} MOLINA H. G. - ULLMAN J. D. - WIDOM J., 2002, Database Systems, Upper Saddle River : Prentice-Hall, 2002, 1119 s., Pearson International edition, 0-13-098043-9
-
-%\bibitem{br2} MOLINA H. G. - ULLMAN J. D. - WIDOM J., 2000 , Databasse System implementation, New Jersey : Prentice-Hall, 2000, 653s., ???
-
-%\bibitem{br3} ULLMAN J. D. - WIDOM J., 1997, A First Course in Database Systems, New Jersey : Prentice-Hall, 1997, 470s., 
-
-%\bibitem{br4} PREFUSE, 2007, The Prefuse visualization toolkit,  [online] Dostupné na internete: <http://prefuse.org/>
-
-%\bibitem{br5} PREFUSE Forum, Sourceforge - Prefuse Forum,  [online] Dostupné na internete: <http://sourceforge.net/projects/prefuse/>
-
-%\end{thebibliography}
-
 %---koniec Referencii
+
 
 % -------------------
 %--- Prilohy---
 % -------------------
 
-%Nepovinná časť prílohy obsahuje materiály, ktoré neboli zaradené priamo  do textu. Každá príloha sa začína na novej strane.
-%Zoznam príloh je súčasťou obsahu.
-%
+
 \input 06-prilohaCD.tex
 
 \end{document}

@@ -4,53 +4,54 @@
     # "\newcommand{\switchargs}[2]{#2#1} "
 }
 
-@article{crowbars,
-    title={Fault injection using crowbars on embedded systems},
-    author={O'Flynn, Colin},
-    journal={Cryptology ePrint Archive},
-    year={2016}
-}
-
 @article{crypto,
     author={Barenghi, Alessandro and Breveglieri, Luca and Koren, Israel and Naccache, David},
+    title={Fault Injection Attacks on Cryptographic Devices: Theory, Practice, and Countermeasures},
     journal={Proceedings of the IEEE}, 
-    title={Fault Injection Attacks on Cryptographic Devices: Theory, Practice, and Countermeasures}, 
     year={2012},
     volume={100},
     number={11},
-    pages={3056-3076},
+    pages={3056-3076}
 }
 
-@Article{lowcost,
+@article{lowcost,
     author = {Delarea, Shaked and Oren, Yossi},
     title = {Practical, Low-Cost Fault Injection Attacks on Personal Smart Devices},
     journal = {Applied Sciences},
-    volume = {12},
     year = {2022},
+    volume = {12},
     number = {1},
-    article-number = {417},
-    issn = {2076-3417},
+}
+
+@article{bootloader,
+    author={Van den Herrewegen, Jan and Oswald, David and Garcia, Flavio D. and Temeiza, Qais},
+    title={Fill your Boots: Enhanced Embedded Bootloader Exploits via Fault Injection and Binary Analysis},
+    journal={IACR Transactions on Cryptographic Hardware and Embedded Systems},
+    year={2020},
+    volume={2021},
+    number={1},
+    pages={56–81}
 }
 
 @inproceedings{clock,
     author={Balasch, Josep and Gierlichs, Benedikt and Verbauwhede, Ingrid},
+    title={An In-depth and Black-box Characterization of the Effects of Clock Glitches on 8-bit {MCUs}},
     booktitle={2011 Workshop on Fault Diagnosis and Tolerance in Cryptography}, 
-    title={An In-depth and Black-box Characterization of the Effects of Clock Glitches on 8-bit MCUs}, 
     year={2011},
-    pages={105-114},
+    pages={105-114}
 }
 
 @inproceedings{emfi,
     author={Moro, Nicolas and Dehbaoui, Amine and Heydemann, Karine and Robisson, Bruno and Encrenaz, Emmanuelle},
+    title={Electromagnetic Fault Injection: Towards a Fault Model on a 32-bit Microcontroller},
     booktitle={2013 Workshop on Fault Diagnosis and Tolerance in Cryptography}, 
-    title={Electromagnetic Fault Injection: Towards a Fault Model on a 32-bit Microcontroller}, 
     year={2013},
-    pages={77-88},
+    pages={77-88}
 }
 
 @inproceedings{chipwhisperer,
-    title={Chipwhisperer: An open-source platform for hardware embedded security research},
     author={O’Flynn, Colin and Chen, Zhizhang David},
+    title={Chipwhisperer: An open-source platform for hardware embedded security research},
     booktitle={International Workshop on Constructive Side-Channel Analysis and Secure Design},
     pages={243--260},
     year={2014},
@@ -58,88 +59,102 @@
 }
 
 @inproceedings{powerGlitch,
+    author={Zussa, Loic and Dutertre, Jean-Max and Clediere, Jessy and Robisson, ,Bruno},
     title={Analysis of the fault injection mechanism related to negative and positive power supply glitches using an on-chip voltmeter},
     booktitle={Symposium on Hardware-Oriented Security and Trust (HOST)},
-    author={Zussa, Loic and Dutertre, Jean-Max and Clediere, Jessy and Robisson, Bruno},
     year={2014},
-    month={05},
     pages={130-135},
-    isbn={978-1-4799-4112-4},
+}
+
+@inproceedings{laserFI,
+    author={Skorobogatov, Sergei P. and Anderson, Ross J.},
+    title={Optical Fault Induction Attacks},
+    booktitle={Cryptographic Hardware and Embedded Systems - CHES 2002},
+    year={2003},
+    pages={2--12},
+    publisher={Springer Berlin Heidelberg},
+}
+
+@misc{crowbars,
+    author={O'Flynn, Colin},
+    title={Fault injection using crowbars on embedded systems},
+    howpublished = {Cryptology ePrint Archive, Paper 2016/810},
+    year={2016}
 }
 
 @misc{vccOnTheCheap,
     author={Claesson, Christoffer},
     title={Voltage glitching on the cheap},
-    year={2022},
-    note={[Citované 2023-3-18] Dostupné z \url{https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/}},
+    year={2019},
+    note={[Citované 2023-03-18] Dostupné z \url{https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/}}
 }
 
 @misc{deadlock,
     author={Vita, Dennis and Bajús, Alex},
     title={Deadlock},
     year={2022},
-    note={[Citované 2023-4-16] Dostupné z \url{https://www.st.fmph.uniba.sk/~vita3/rp/zima/rp_ZS.html}},
+    note={[Citované 2023-04-16] Dostupné z \url{https://www.st.fmph.uniba.sk/~vita3/rp/zima/rp_ZS.html}}
 }
 
 @misc{clockCircuit,
-    author={NewAE Technology Inc.},
+    author={{NewAE Technology Inc.}},
     title={Tutorial {A2} Introduction to Glitch Attacks (including Glitch Explorer)},
     year={2019},
-    note={[Citované 2023-1-31] Dostupné z \url{https://wiki.newae.com/V4:Tutorial_A2_Introduction_to_Glitch_Attacks_(including_Glitch_Explorer)}},
+    note={[Citované 2023-01-31] Dostupné z \url{https://wiki.newae.com/V4:Tutorial_A2_Introduction_to_Glitch_Attacks_(including_Glitch_Explorer)}}
 }
 
 @misc{AntiFI,
     author={O'Flynn, Colin},
     title={Building Against Fault Injection Attacks},
     year={2020},
-    note={[Citované 2022-4-11] Dostupné z \url{https://circuitcellar.com/research-design-hub/building-against-fault-injection-attacks/}},
+    note={[Citované 2022-04-11] Dostupné z \url{https://circuitcellar.com/research-design-hub/building-against-fault-injection-attacks/}}
 }
 
 @misc{inlineAsm,
-    author={GNU Compiler Collection},
-    title={Using Assembly Language with C},
+    author={{GNU Compiler Collection}},
+    title={Using Assembly Language with {C}},
     year={2023},
-    note={[Citované 2023-4-18] Dostupné z \url{https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html#Using-Assembly-Language-with-C}},
+    note={[Citované 2023-04-18] Dostupné z \url{https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html#Using-Assembly-Language-with-C}}
 }
 
 @misc{avrdude,
     author={{AVRDUDE Development Team}},
-    title={{AVRDUDE}: {A}n {AVR} {P}rogrammer/{U}tility},
+    title={{AVRDUDE}: An {AVR} Programmer/Utility},
     year={2023},
-    note={[Citované 2023-4-28] Dostupné z \url{http://savannah.nongnu.org/projects/avrdude/}},
+    note={[Citované 2023-04-28] Dostupné z \url{http://savannah.nongnu.org/projects/avrdude/}}
 }
 
 @manual{atmegaData,
     organization={Atmel Corporation},
     title={{ATMega328P} Datasheet},
     year={2015},
-    note={Rev. 7810D–AVR–01/15},
+    note={Rev. 7810D–AVR–01/15}
 }
 
 @manual{avrInstruction,
     organization={Atmel Corporation},
     title={{AVR} Instruction Set Manual},
     year={2016},
-    note={Rev. Atmel-0856L-AVR-Instruction-Set-Manual\_Other-11/2016},
+    note={Rev. Atmel-0856L-AVR-Instruction-Set-Manual\_Other-11/2016}
 }
 
 @manual{stmReference,
     organization={STMicroelectronics},
     title={{RM0090} {STM32F4} Reference manual},
     year={2021},
-    note={Rev. 19},
+    note={Rev. 19}
 }
 
 @manual{stmInstruction,
     organization={STMicroelectronics},
     title={{PM0214} {STM32 Cortex-M4} Programming manual},
     year={2020},
-    note={Rev. 10},
+    note={Rev. 10}
 }
 
 @manual{gateDriver,
     organization={Microchip Technology},
     title={{TC4420/TC4429} Datasheet},
     year={2012},
-    note={Rev. D},
+    note={Rev. D}
 }
