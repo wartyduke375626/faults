@@ -239,7 +239,7 @@ Rozhodli sme sa preto modifikovať kód v ostatných dvoch experimentoch, ktoré
 Rovnaký útok sme teraz vykonali na takto modifikovaný kód (pomocou Nano aj Discovery), pričom útok sme spustili s nulovým posunom (Hneď po prijatí signálu). Úspešne sa podarilo dosiahnuť vynechanie cielenej inštrukcie, po pridaní vhodného počtu inštrukcií NOP pred ňu. Počet bol pritom rôzny pri útočení pomocou dosky Nano a Discovery, podrobnosti sú v tabuľke \ref{tab:experiments}. V prípade inštrukcie LDI zostala v~registri pôvodná hodnota 0x00 a v prípade RJMP bol register prepísaný na hodnotu 0xFF inštrukciou, ktorú mal skok preskočiť. Ďalej sme skúsili útok zopakovať aj s~inými hodnotami pri inicializácií a prepísaní registra. Výsledok bol analogický, čím sme potvrdili, že skutočne dochádza k vynechaniu inštrukcie a nie k inému ovplyvneniu programu.
 
 \begin{table}
-    \caption[Porovnanie Výsledkov experimentov]{Porovnanie Výsledkov experimentov s doskami Nano a Discovery. Veľkosť parametra výpadok je uvedený počtom iterácií príslušnej procedúry oneskorenia. Parameter posun bol pri týchto útokoch vždy nulový.}
+    \caption[Porovnanie výsledkov experimentov]{Porovnanie výsledkov experimentov s doskami Nano a Discovery. Veľkosť parametra výpadok je uvedený počtom iterácií príslušnej procedúry oneskorenia. Parameter posun bol pri týchto útokoch vždy nulový.}
     \label{tab:experiments}
     \begin{center}
     \begin{tabular}{|c|c|c|}
