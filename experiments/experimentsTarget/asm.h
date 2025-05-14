@@ -1,20 +1,20 @@
 /**
-* Makra pre C Inline Assembly
+* Macros for C Inline Assembly
 */
 
-// nastavenie logickej 1 na danom porte pomocou instrukcie SBI
+// set logic 1 on on port using SBI instruction
 #define setPortOn(port, bit) \
 __asm__ volatile ( \
-    "sbi %0, %1"    "\n\t" /* instrukcia SBI */ \
+    "sbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// nastavenie logickej 0 na danom porte pomocou instrukcie CBI
+// set logic 0 on on port using SBI instruction
 #define setPortOff(port, bit) \
 __asm__ volatile ( \
-    "cbi %0, %1"    "\n\t" /* instrukcia CBI */ \
+    "cbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \

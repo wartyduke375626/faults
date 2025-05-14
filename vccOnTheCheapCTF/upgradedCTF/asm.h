@@ -1,32 +1,32 @@
 /**
-* Makra pre C Inline Assembly
+* Macros for C Inline Assembly
 */
 
-// nastavenie logickej 1 na danom porte pomocou instrukcie SBI
+// set logic 1 on on port using SBI instruction
 #define setPortOn(port, bit) \
 __asm__ volatile ( \
-    "sbi %0, %1"    "\n\t" /* instrukcia SBI */ \
+    "sbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// nastavenie logickej 0 na danom porte pomocou instrukcie CBI
+// set logic 0 on on port using SBI instruction
 #define setPortOff(port, bit) \
 __asm__ volatile ( \
-    "cbi %0, %1"    "\n\t" /* instrukcia CBI */ \
+    "cbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// procedura oneskorenia
+// delay procedure
 #define asmDelay(count) \
 __asm__ volatile( \
-    "mov r24, %0"   "\n\t" /* inicializacia r24 na vstupnu hodnotu */ \
+    "mov r24, %0"   "\n\t" /* move input to r24 */ \
     "loop%=:"       "\n\t" \
-    "dec r24"       "\n\t" /* dekrement */ \
-    "brne loop%="   "\n\t" /* podmieneny skok ak bol vysledok nenulovy */ \
+    "dec r24"       "\n\t" \
+    "brne loop%="   "\n\t" /* jump if non-zero */ \
     : /* No Outputs */ \
     : "r" (count) \
     : "r24" \

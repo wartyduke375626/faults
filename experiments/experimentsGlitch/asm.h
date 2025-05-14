@@ -1,43 +1,43 @@
 /**
-* Makra pre C Inline Assembly
+* Macros for C Inline Assembly
 */
 
-// nastavenie logickej 1 na danom porte pomocou instrukcie SBI
+// set logic 1 on on port using SBI instruction
 #define setPortOn(port, bit) \
 __asm__ volatile ( \
-    "sbi %0, %1"    "\n\t" /* instrukcia SBI */ \
+    "sbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// nastavenie logickej 0 na danom porte pomocou instrukcie CBI
+// set logic 0 on on port using SBI instruction
 #define setPortOff(port, bit) \
 __asm__ volatile ( \
-    "cbi %0, %1"    "\n\t" /* instrukcia CBI */ \
+    "cbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// cakanie na prijatie signalu -- nekonecny cyklus, kym dany bit vstupneho pinu nie je nastaveny na 1
+// wait for signal -- infinite loop till, input bit in I/O register is 1
 #define waitForSignal(pin, bit) \
 __asm__ volatile ( \
     "loop%=:"       "\n\t" \
-    "sbis %0, %1"   "\n\t" /* preskoci nasledujucu instrukciu ak bit I/O registra je nastaveny na 1 */ \
-    "rjmp loop%="   "\n\t" /* skok sposobujuci nekonecny cyklus */ \
+    "sbis %0, %1"   "\n\t" /* skips next instruction if bit is set to 1 */ \
+    "rjmp loop%="   "\n\t" /* infinite loop jump */ \
     : /* No Outputs */ \
     : "I" (pin), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// procedura oneskorenia
+// delay procedure
 #define asmDelay(count) \
 __asm__ volatile( \
-    "mov r24, %0"   "\n\t" /* inicializacia r24 na vstupnu hodnotu */ \
+    "mov r24, %0"   "\n\t" /* move input to r24 */ \
     "loop%=:"       "\n\t" \
-    "dec r24"       "\n\t" /* dekrement */ \
-    "brne loop%="   "\n\t" /* podmieneny skok ak bol vysledok nenulovy */ \
+    "dec r24"       "\n\t" \
+    "brne loop%="   "\n\t" /* jump if non-zero */ \
     : /* No Outputs */ \
     : "r" (count) \
     : "r24" \

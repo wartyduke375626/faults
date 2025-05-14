@@ -1,63 +1,63 @@
 /**
-* Makra pre C Inline Assembly
+* Macros for C Inline Assembly
 */
 
-// nastavenie logickej 1 na danom porte pomocou instrukcie SBI
+// set logic 1 on on port using SBI instruction
 #define setPortOn(port, bit) \
 __asm__ volatile ( \
-    "sbi %0, %1"    "\n\t" /* instrukcia SBI */ \
+    "sbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// nastavenie logickej 0 na danom porte pomocou instrukcie CBI
+// set logic 0 on on port using SBI instruction
 #define setPortOff(port, bit) \
 __asm__ volatile ( \
-    "cbi %0, %1"    "\n\t" /* instrukcia CBI */ \
+    "cbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// procedura oneskorenia
+// delay procedure
 #define asmDelay(count) \
 __asm__ volatile( \
-    "mov r24, %0"   "\n\t" /* inicializacia r24 na vstupnu hodnotu */ \
+    "mov r24, %0"   "\n\t" /* move input to r24 */ \
     "loop%=:"       "\n\t" \
-    "dec r24"       "\n\t" /* dekrement */ \
-    "brne loop%="   "\n\t" /* podmieneny skok ak bol vysledok nenulovy */ \
+    "dec r24"       "\n\t" \
+    "brne loop%="   "\n\t" /* jump if non-zero */ \
     : /* No Outputs */ \
     : "r" (count) \
     : "r24" \
 )
 
-// procedura oneskorenia s 16-bitovym vstupom
+// delay procedure with 16-bit input
 #define asmDelayLong(count) \
 __asm__ volatile ( \
-    "mov r23, %A0"     "\n\t" /* inicializacia r23 na spodny bajt vstupu */ \
-    "mov r24, %B0"     "\n\t" /* inicializacia r24 na vrchny bajt vstupu */ \
-    "tst r23"          "\n\t" /* ak je spodny bajt 0, zaciname vonkajsim cyklom */ \
+    "mov r23, %A0"     "\n\t" /* move least significant byte (LSB) of input to r23 */ \
+    "mov r24, %B0"     "\n\t" /* move most significant byte (MSB) of input to r24 */ \
+    "tst r23"          "\n\t" /* if LSB == 0, begin with outer loop */ \
     "breq out_loop%="  "\n\t" \
 \
-    "in_loop%=:"       "\n\t" /* vnutorny cyklus podla spodneho bajtu */ \
+    "in_loop%=:"       "\n\t" /* inner loop going through LSB */ \
     "nop"              "\n\t" \
-    "dec r23"          "\n\t" \
+    "dec r23"          "\n\t" /* decrement LSB */ \
     "brne in_loop%="   "\n\t" \
 \
-    "out_loop%=:"      "\n\t" /* vonkajsi cyklus podla spodneho bajtu */ \
-    "tst r24"          "\n\t" /* ak je vrchny bajt 0, koncime (spodny je urcite 0, lebo sa predtym vykonal vnutorny cyklus)*/ \
+    "out_loop%=:"      "\n\t" /* outer loop going through MSB */ \
+    "tst r24"          "\n\t" /* if MSB == 0, end (LSB is guaranteed to be 0 here)*/ \
     "breq end%="       "\n\t" \
-    "ldi r23, 0xFF"    "\n\t" /* nastavime spodny bajt na 0xFF */ \
-    "dec r24"          "\n\t" /* dekrementujeme vrchny bajt */ \
-    "rjmp in_loop%="   "\n\t" /* skok na vnutorny cyklus */ \
+    "ldi r23, 0xFF"    "\n\t" /* set LSB to 0xFF */ \
+    "dec r24"          "\n\t" /* decrement MSB */ \
+    "rjmp in_loop%="   "\n\t" /* jump to inner loop */ \
     "end%=:"           "\n\t" \
     : /* No Outputs */ \
     : "r" (count) \
     : "r23", "r24" \
 )
 
-// makra pre staticku deklaraciu nop instrukcii (alternativa k procedure oneskorenia)
+// macros for static delay using NOPs instead of loops (alternative to asmDelay()/asmDelayLong())
 #define rep0(expr)
 #define rep1(expr) expr rep0(expr)
 #define rep2(expr) expr rep1(expr)
@@ -70,5 +70,5 @@ __asm__ volatile ( \
 #define rep9(expr) expr rep8(expr)
 #define rep10(expr) expr rep9(expr)
 
-// nopDelay(x), x<=10 vyrobi x nop instrukcii
+// count<=10, generates x NOP instructions
 #define nopDelay(count) rep##count(__asm__ volatile("nop");)

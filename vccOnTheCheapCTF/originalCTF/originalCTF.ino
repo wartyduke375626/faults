@@ -1,6 +1,6 @@
 /**
-* Originalny kod utoku na firmver zo sutaze CTF
-* prevzaty 2023-03-18 z:
+* Original code from CTF challenge
+* (2023-03-18) taken from:
 * https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/
 */
 

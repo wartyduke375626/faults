@@ -1,86 +1,85 @@
 /**
-* Kod pouzity na riadenie utokov v casti experimenty (doska Arduino Nano).
-* Zaroven bol pouzity pri utoku na priklad 1 -- Uzamknuty cip.
+* Program used to control the attacks during experiments (Arduino Nano board).
+* Also used as demo when attacking example 1 -- Locked Chip.
 */
 
 #include "asm.h"
 
-// definicia konstant pre pin, ktory ovlada tranzistor
+// define constants for pin which controls the transistor
 #define GLITCH_PIN 2
 #define GLITCH_PORT PORTD
 #define GLITCH_BIT 2
 
-// definicia konstant pre pin, na ktorom prijimame signal pre sinchronizaciu
+// define constants for pin on which we receive synchronization signal
 #define SIGNAL_PIN 3
 #define SIGNAL_PORT PIND
 #define SIGNAL_BIT 3
 
-// nastavenie maximalnej a minimalnej hodnoty parametrov posun (glitchOffset) a vypadok (glitchDelay)
-// mozno upravit podla potreby
+// set min and max values of parameters glitchOffset and glitchDelay
+// modify according to experiment
 #define GLITCH_OFFSET_MIN 1
 #define GLITCH_OFFSET_MAX 1
 #define GLITCH_DELAY_MIN 6
 #define GLITCH_DELAY_MAX 6
 
-// globalne premenne
+// global variables
 uint8_t glitchOffset = GLITCH_OFFSET_MIN;
 uint8_t glitchDelay = GLITCH_DELAY_MIN;
 
-// funkcia, ktora ovlada tranzistor
+// function which controls the transistor
 void glitch() {
-    // ulozime globalne premenne do registrov pre pouzitie v asembleri
+    // store the global variables in a registers for usage in assembly
     register uint8_t localOffset = glitchOffset;
     register uint8_t localDelay = glitchDelay;
 
-    // pockame na signal
-    // _SFR_IO_ADDR staticky vypocita adresu I/O registra pre ovladanie pinu
+    // wait for signal (_SFR_IO_ADDR statically calculates the address of I/O register)
     waitForSignal(_SFR_IO_ADDR(SIGNAL_PORT), SIGNAL_BIT);
 
-    // posun
+    // glitchOffset
     asmDelay(localOffset);
 
-    // vypneme tranzistor
+    // turn off transistor
     setPortOff(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
 
-    // vypadok
+    // glitchDelay
     asmDelay(localDelay);
 
-    // zapneme tranzistor
+    // turn on transistor
     setPortOn(_SFR_IO_ADDR(GLITCH_PORT), GLITCH_BIT);
 }
 
-// funkcia setup sa vola jedenkrat pri spusteni
+// the setup function runs once
 void setup() {
-    // inicializujeme seriovu komunikaciu
+    // initialize Serial communication
     Serial.begin(19200);
 
-    // nastavime pin do vystupneho resp. vstupneho modu
+    // set pins to input/output modes
     pinMode(GLITCH_PIN, OUTPUT);
     pinMode(SIGNAL_PIN, INPUT);
 
-    // nastavime pin na logicku 1 (zapneme tranzistor)
+    // set pin to logic 1 (turn on transistor)
     digitalWrite(GLITCH_PIN, HIGH);
     delay(3000);
 
     Serial.println("Glitching is ready.\n");
 }
 
-// funkcia loop sa opakuje dookola -- hlavny beh programu
+// the loop function executes in an infinite loop
 void loop() {
     Serial.println("Waiting for signal...\n");
-    // spustime utok
+    // run the attack
     glitch();
 
     Serial.println("Glitch executed:");
     Serial.print("\toffset "); Serial.println(glitchOffset);
     Serial.print("\tdelay "); Serial.println(glitchDelay);
 
-    // zvacsime parametre posun a vypadok (ak MAX==MIN => hodnota daneho parametra sa nezmeni)
+    // increment parameters glitchOffset and glitchDelay (if MAX==MIN => values don't change)
     glitchOffset += 1;
     if (glitchOffset > GLITCH_OFFSET_MAX) glitchOffset = GLITCH_OFFSET_MIN;
     glitchDelay += 1;
     if (glitchDelay > GLITCH_DELAY_MAX) glitchDelay = GLITCH_DELAY_MIN;
 
-    // pockame na stabilizaciu napatia pred dalsim utokom
+    // wait for voltage to stabilize before next attempt
     delay(100);
 }
