@@ -1,27 +1,27 @@
 /**
-* Makra pre C Inline Assembly
+* Macros for C Inline Assembly
 */
 
-// nastavenie logickej 1 na danom porte pomocou instrukcie SBI
+// set logic 1 on on port using SBI instruction
 #define setPortOn(port, bit) \
 __asm__ volatile ( \
-    "sbi %0, %1"    "\n\t" /* instrukcia SBI */ \
+    "sbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// nastavenie logickej 0 na danom porte pomocou instrukcie CBI
+// set logic 0 on on port using SBI instruction
 #define setPortOff(port, bit) \
 __asm__ volatile ( \
-    "cbi %0, %1"    "\n\t" /* instrukcia CBI */ \
+    "cbi %0, %1"    "\n\t" \
     : /* No Outputs */ \
     : "I" (port), "i" (bit) \
     : /* No Clobbers */ \
 )
 
-// 'krypticka' cast kodu v asembleri, vystup tejto casti je vzdy konstanta 0 v registri status
-// cielom utoku je, aby vystup tejto casti (status) nebol 0
+// vulnerable obfuscated part in Assembly, the output in 'status' is always 0
+// the goal of the attack is changing the output of this function to a non-zero value
 #define asmCheckStatus(status) \
 __asm__ volatile ( \ 
     "ldi %0, 0xFF"      "\n\t" \
